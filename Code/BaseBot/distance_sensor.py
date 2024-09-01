@@ -1,6 +1,7 @@
 #
 # DistanceSensor
 #
+# CHECK THIS
 from machine import Pin
 from time import sleep, sleep_us, ticks_us
 

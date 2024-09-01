@@ -1,6 +1,8 @@
  #
  # BaseBot
  #
+ # OBSOLETE?
+ #
 from drive_train import DriveTrain
  
 class BaseBot:
