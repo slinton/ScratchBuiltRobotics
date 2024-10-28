@@ -20,19 +20,10 @@ class DriveTrain:
     
     MAX_DUTY_CYCLE: int = 65535
     
-<<<<<<< HEAD
     def __init__(self,
                  left_pins=(10, 11),
                  right_pins=(12, 13),
                  frequency: int=20_000)-> None: 
-=======
-    def __init__(self, left_pins, right_pins, frequency: int=20_000)-> None: 
-#                  left_1_pin_num: int, 
-#                  left_2_pin_num: int, 
-#                  right_1_pin_num: int, 
-#                  right_2_pin_num: int, 
-#                  frequency: int=20_000)-> None: 
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
         """Initialize the DriveTrain object with the pins for the motors. Optionally 
         set the frequency of the PWM signal.
 
@@ -43,27 +34,10 @@ class DriveTrain:
         """
         
         # Create the PWM objects for the motor driver
-<<<<<<< HEAD
         self.left_1 = PWM(Pin(left_pins[0], Pin.OUT), frequency)
         self.left_2 = PWM(Pin(left_pins[1], Pin.OUT), frequency)
         self.right_1 = PWM(Pin(right_pins[0], Pin.OUT), frequency)
         self.right_2 = PWM(Pin(right_pins[1], Pin.OUT), frequency)
-=======
-        self.left_1 = PWM(Pin(left_pins[0], Pin.OUT))
-        self.left_2 = PWM(Pin(left_pins[1], Pin.OUT))
-        self.right_1 = PWM(Pin(right_pins[0], Pin.OUT))
-        self.right_2 = PWM(Pin(right_pins[1], Pin.OUT))
-#         self.left_1 = PWM(Pin(left_1_pin_num, Pin.OUT))
-#         self.left_2 = PWM(Pin(left_2_pin_num, Pin.OUT))
-#         self.right_1 = PWM(Pin(right_1_pin_num, Pin.OUT))
-#         self.right_2 = PWM(Pin(right_2_pin_num,Pin.OUT))
-        
-        # Set the frequency of the PWM signal
-        self.left_1.freq(frequency)
-        self.left_2.freq(frequency)
-        self.right_1.freq(frequency)
-        self.right_2.freq(frequency)
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
         
     def move(self, left_speed: int, right_speed: int)-> None:
         """Arbitrary motion, controlling the speed of each motor independently.
@@ -165,12 +139,8 @@ class DriveTrain:
 if __name__ == "__main__":
     print('Testing DriveTrain class')
     # Create the DriveTrain object
-<<<<<<< HEAD
     #dt = DriveTrain((1, 2), (3, 4))
     dt = DriveTrain()
-=======
-    dt = DriveTrain((1, 2), (3, 4))
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
     print(repr(dt))
     
     # Test the forward method
@@ -227,3 +197,4 @@ if __name__ == "__main__":
     dt.stop()
     
     print("Test complete")
+
