@@ -1,10 +1,10 @@
 #
 # Menu
 #
+# Version 24_12_26_01
+#
 # TODO: add display object to display
 #
-from re import L
-from typing import DefaultDict, List, Callable, Optional
 from menu_item import MenuItem
 
 class Menu:
@@ -43,6 +43,7 @@ class Menu:
         selected_item = self.current_menu_items[self.selected_index]
         
         if selected_item.sub_items:
+            print('Next level')
             self.menu_stack.append(self.current_menu_items) # Push the current menu onto the stack
             self.current_menu_items = selected_item.sub_items
             self.selected_index = 0

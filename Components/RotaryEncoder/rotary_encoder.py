@@ -1,6 +1,7 @@
 #
 # RotaryEncoder
-# Version 0.1
+#
+# Version 24_07_31_04
 #
 from machine import Pin
 from time import sleep
