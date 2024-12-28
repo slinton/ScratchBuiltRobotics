@@ -1,5 +1,5 @@
 #
-# Test of async.
+# Test of async
 #
 from time import sleep
 import uasyncio as asyncio
