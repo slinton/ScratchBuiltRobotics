@@ -22,17 +22,11 @@ class BLEServer:
     def __init__(self,
                  name:str,
                  create_message_func=None,
-<<<<<<< HEAD
                  on_connected_func=None,
                  on_disconnected_func=None,
                  send_interval_ms:int=1000,
                  service_uuid:bluetooth.UUID=_GENERIC_SERVICE_UUID,
                  char_uuid:bluetooth.UUID=_GENERIC_CHAR_UUID)->None:
-=======
-                 send_interval_ms: int=1000,
-                 service_uuid: bluetooth.UUID=_GENERIC_SERVICE_UUID,
-                 char_uuid: bluetooth.UUID=_GENERIC_CHAR_UUID)-> None:
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
         """Initialize the BLEServer object.
 
         Args:
@@ -69,12 +63,8 @@ class BLEServer:
                     await self.send_message()
                     await asyncio.sleep_ms(self.send_interval_ms)
                 else:
-<<<<<<< HEAD
                     if self.connection and self.on_disconnected_func:
                         self.on_disconnected()
-=======
-                    self.show_connected(False)
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
                     await self.connect_to_client()
                     if self.on_connected_func:
                         self.on_connected_func()
@@ -82,7 +72,6 @@ class BLEServer:
                 print(f'Exception: {e}')
                 self.connection = None
                 
-<<<<<<< HEAD
     def is_connected(self)->bool:
         return not self.connection == None and self.connection.is_connected() 
              
@@ -91,49 +80,11 @@ class BLEServer:
         message_str = 'x'
         if not self.create_message_func == None:
             message_str = self.create_message_func()
-=======
-    def show_connected(self, connected: bool)-> None:
-        """Subclasses over ride this to show state of connecton"""
-        pass
-                
-    def is_connected(self)-> bool:
-        """Determine if the server is connected to a client.
-
-        Returns:
-            bool: true if connected, false otherwise
-        """
-        return not self.connection == None and self.connection.is_connected() 
-             
-    async def send_message(self)-> None:
-        """Send a message to the client. The message is created by calling the 
-        create_message_func
-        """
-        message_str = self.create_message()
-#         if not self.create_message_func == None:
-#             message_str = self.create_message_func()
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
         message = bytearray(message_str, 'utf-8')
         self.characteristic.write(message)
         self.characteristic.notify(self.connection, message)
         
-<<<<<<< HEAD
     async def connect_to_client(self)->None:
-=======
-    def create_message(self)-> str:
-        """Function that creates a message to be sent by the server. 2 ways to do this:
-        1. Override this function with a subclass
-        2. Provide a function to the constructor
-
-        Returns:
-            str: message to be sent
-        """
-        if self.create_message_func == None:
-            return 'x'
-        else:
-            return self.create_message_func()
-        
-    async def connect_to_client(self)-> None:
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
         print('Advertising...',end='')
         self.connection = await aioble.advertise(
                 1000, 
@@ -160,7 +111,6 @@ class BLEServer:
     
     
 if __name__ == "__main__":
-<<<<<<< HEAD
     try:
         bleServer = BLEServer('JoystickController')
         bleServer.start()
@@ -170,7 +120,3 @@ if __name__ == "__main__":
         
         
     
-=======
-    bleServer = BLEServer('BLE Test')
-    bleServer.start()
->>>>>>> 8a7ad559408607d21f58db1b74e8324b7722e05b
