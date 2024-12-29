@@ -1,7 +1,7 @@
 #
 # BLEJoystickController
 #
-# Version 24_07_31_04
+# Version 24_12_28_1
 #
 from machine import Pin, I2C
 from ads1x15 import ADS1115
@@ -24,10 +24,10 @@ class BLEJoystickController(BLEServer):
         self.debug = debug
         
     def create_message(self)-> str:
-        ch0 = hex(self.adc.read(self.rate, 0))[2:]
-        ch1 = hex(self.adc.read(self.rate, 1))[2:]
-        ch2 = hex(self.adc.read(self.rate, 2))[2:]
-        ch3 = hex(self.adc.read(self.rate, 3))[2:]
+        ch0 = hex(max(0, self.adc.read(self.rate, 0)))[2:]
+        ch1 = hex(max(0, self.adc.read(self.rate, 1)))[2:]
+        ch2 = hex(max(0, self.adc.read(self.rate, 2)))[2:]
+        ch3 = hex(max(0, self.adc.read(self.rate, 3)))[2:]
         left_value = 1 - self.left_button.value()
         right_value = 1 - self.right_button.value()
         button_code = left_value + 2 * right_value
@@ -54,3 +54,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Program terminated')
     
+

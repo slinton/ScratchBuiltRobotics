@@ -22,7 +22,8 @@ def random_message():
 
 server = BLEServer(
     name='BLE Test',
-    send_message_func=random_message,
+    create_message_func=random_message,
     send_interval_ms=100)
 
-asyncio.run(server.start())
+# asyncio.run(server.start())
+server.start()

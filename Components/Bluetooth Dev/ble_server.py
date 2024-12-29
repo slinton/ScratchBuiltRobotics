@@ -31,10 +31,8 @@ class BLEServer:
 
         Args:
             name (str): Name of the BLE server. This is used by the client to recognize the server.
-            create_message_func (function, optional): User-provided function that provides a string to 
+            create_message_func (_type_, optional): User-proviced function that provides a string to 
                 be sent by the server. Defaults to None.
-            on_connected_func: (function, optional): Called when the server connects to a client
-            on_disconnected_func: (function, optional): Called when the server disconnect from a client
             send_interval_ms (int, optional): Interval between sends, in ms. Defaults to 1000.
             service_uuid (UUID, optional): Service UUID. Defaults to _GENERIC_SERVICE_UUID.
             char_uuid (UUID, optional): Characteristic UUID. Defaults to _GENERIC_CHAR_UUID.
@@ -50,27 +48,24 @@ class BLEServer:
         self.characteristic = None
         self.createService()
         
-    def start(self)-> None:
-        """Non-synchronous method to start the main loop"""
+    def start(self)->None:
         asyncio.run(self.run_loop())
         
-    async def run_loop(self)-> None:
-        """Run the main loop to connect and send messages"""
+    async def run_loop(self)->None:
         while True:
             try:
                 if self.is_connected():
-                    self.show_connected(True)
                     await self.send_message()
                     await asyncio.sleep_ms(self.send_interval_ms)
                 else:
                     if self.connection and self.on_disconnected_func:
-                        self.on_disconnected()
+                        self.on_disconnected_func()
                     await self.connect_to_client()
                     if self.on_connected_func:
                         self.on_connected_func()
             except Exception as e:
                 print(f'Exception: {e}')
-                self.connection = None
+                self.connection = None          
                 
     def is_connected(self)->bool:
         return not self.connection == None and self.connection.is_connected() 
@@ -95,7 +90,7 @@ class BLEServer:
         print("connected to:", self.connection.device)
         print(f'Is connected: {self.connection.is_connected()}')
         
-    def createService(self)-> None:
+    def createService(self):
         """Create the service and characteristic for the BLE server and registers
         the service. This function is called during initialization.
         """
@@ -118,5 +113,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('Program terminated')
         
-        
-    
