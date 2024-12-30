@@ -94,7 +94,7 @@ class Buzzer:
         self.buzzer.duty_u16(0)
         sleep(delay)
         
-    async def _play_note_async(self, note: int, duration: float, delay: float=0.01)-> None:
+    def _play_note_async(self, note: int, duration: float, delay: float=0.01)-> None:
         if note == 0:
             await asyncio.sleep(duration + delay)
             return
@@ -130,6 +130,7 @@ if __name__ == '__main__':
         print('Trying interrupted looped song')
         asyncio.run( asyncio.gather(wait(buzzer), play_song(buzzer)))
         sleep(1)
+        
         
         print('Async buzzer')
         asyncio.run(buzzer._play_note_async(200, 0.5))

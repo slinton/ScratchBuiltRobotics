@@ -9,7 +9,7 @@ print('I2C address : ' + hex(i2c.scan()[0]).upper())
 print('I2C config  : ' + str(i2c))
 
 oled = SSD1306_I2C(width, height, i2c)
-# 
+
 oled.fill(0)
 
 oled.text('hi', 5, 8)
