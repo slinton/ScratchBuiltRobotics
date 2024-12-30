@@ -10,6 +10,8 @@ from buzzer import Buzzer
 from time import sleep
 
 class RobotCar:
+    """Contains logic for an autonomously driven car.
+    """
     def __init__(self, left_pins=(10, 11), right_pins=(12, 13), led_pin: int=None, buzzer_pin:int=None)-> None:
         self.running = False
         self.led = None if led_pin == None else Pin(led_pin, Pin.OUT)
