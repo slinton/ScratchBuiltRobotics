@@ -13,6 +13,7 @@ class DriveTrain:
     direction of the motors. 
     TODO: perhaps derive from PinUser class so pins can be listed
     TODO: perhaps tweak speed to duty cycle conversion
+    TODO: 
     TODO: Add reference to motor driver
     TODO: Add reference to PWM: 
     
@@ -25,7 +26,7 @@ class DriveTrain:
                  right_pins=(12, 13),
                  frequency: int=20_000)-> None: 
         """Initialize the DriveTrain object with the pins for the motors. Optionally 
-        set the frequency of the PWM signal.
+        set the frequency of the PWM signal.-
 
         Args:
             left_pins (Tuple[int]): PWM pin numbers for left motor
