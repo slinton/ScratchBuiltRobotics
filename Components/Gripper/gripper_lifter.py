@@ -8,52 +8,52 @@
 from servo import Servo
 from time import sleep
 
-class Gripper:
-    """Implement the gripper
+class GripperLifter:
+    """Implement the gripper lifter mechanism
     """
 
     def __init__(self,
                  pin: int=16,
-                 servo_close_angle: float = 70.0,
-                 servo_open_angle: float=160.0,
+                 servo_top_angle: float = 0.0,
+                 servo_bottom_angle: float=180.0,
                  ) -> None:
         """Initializer
 
-        Gripper angle goes from 0 (closed) to open_angle (fully open)
-        These angles correspond with the servo_close_angle and servo_open_angle, respectively
+        Gripper lifter angle goes from 0 (closed) to open_angle (fully open)
+        These angles correspond with the servo_top_angle and servo_bottom_angle, respectively
 
         Args:
             pin (int, optional): pin for the gripper PWM signal. Defaults to 16.
-            servo_close_angle (float, optional): Angle in degrees corresponding to closed gripper. Defaults to 70.0.
-            servo_open_angle (float, optional): Angle in degrees corresponding to open gripper. Defaults to 160.0.  
+            open_angle (float, optional): Angle in degrees corresponding to open gripper. Defaults to 160.0.
+            close_angle (float, optional): Angle in degrees corresponding to closed gripper. Defaults to 70.0.
         """
         self.servo: Servo = Servo(pin_id=pin)
-        self.servo_close_angle: float = servo_close_angle
-        self.servo_open_angle: float = servo_open_angle
-        self.close_angle: float = 0.0
-        self.open_angle: float = abs(self.servo_open_angle - self.servo_close_angle)
-        self.sign: float = 1 if self.servo_open_angle > self.servo_close_angle else -1
+        self.servo_top_angle: float = servo_top_angle
+        self.servo_bottom_angle: float = servo_bottom_angle
+        self.top_angle: float = 0.0
+        self.bottom_angle: float = abs(self.servo_bottom_angle - self.servo_top_angle)
+        self.sign: float = 1 if self.servo_bottom_angle > self.servo_top_angle else -1
         self.angle: float | None = None
         
-    def open(self, time:float = None) -> None:
-        """Open the gripper completely
+    def lift(self, time:float = None) -> None:
+        """Move gripper to the top
         """
         if time == None or self.angle == None:
-            self.set_angle(self.open_angle)
+            self.set_angle(self.top_angle)
         else:
-            self.move(self.angle, self.open_angle, time)
+            self.move(self.angle, self.top_angle, time)
         
         
-    def close(self, time: float = None) -> None:
-        """Close the gripper completely
+    def lower(self, time: float = None) -> None:
+        """Move gripper to the bottom
         """
         if time == None or self.angle == None:
-            self.set_angle(self.close_angle)
+            self.set_angle(self.bottom_angle)
         else:
-            self.move(self.angle, self.close_angle, time)
+            self.move(self.angle, self.bottom_angle, time)
             
     def move_by(self, d_angle: float) -> None:
-        """Move the gripper by the angle increment given. Open direction is +
+        """Move the gripper by the angle increment given. Lower direction is +
 
         Args:
             d_angle (float): requested change in angle (degrees)
@@ -106,7 +106,7 @@ class Gripper:
         Args:
             angle (float): angle of gripper. 
         """
-        servo_angle: float = self.servo_close_angle + self.sign * angle
+        servo_angle: float = self.servo_top_angle + self.sign * angle
         self._set_servo_angle(servo_angle=servo_angle)
         self.angle = angle
         
@@ -116,25 +116,22 @@ class Gripper:
         Args:
             servo_angle (float): servo angle in degrees
         """
-        #servo_angle: float = min(self.servo_open_angle, max(self.servo_close_angle, servo_angle))
-        servo_angle: float = self._clamp(self.servo_open_angle, self.servo_close_angle, servo_angle)
+        servo_angle: float = self._clamp(servo_angle, self.servo_bottom_angle, self.servo_top_angle)
+        #servo_angle: float = min(self.servo_bottom_angle, max(self.servo_top_angle, servo_angle))
         print(f'Servo angle = {servo_angle}')
         self.servo.write(servo_angle)
         
-
-    def _clamp(self, value: float, start: float, end: float) -> float:
-        """Return value clamped between the other two values
-        TODO: move to a utils file
-        """
+    def _clamp(value: float, start: float, end: float) -> float:
+        """Return value clamped between the other two values"""
         min_value = min(value, min(start, end))
         max_value = max(value, max(start, end))
         return min(max_value, max(min_value, value))
         
-        
 if __name__ == '__main__':
-    gripper = Gripper()
-    gripper.close()
-    sleep(0.5)
+    lifter = GripperLifter()
+    lifter.lift()
+    lifter(0.5)
+    lifter.lower()
     
     
 #     for _ in range(5):
@@ -145,17 +142,18 @@ if __name__ == '__main__':
 #     gripper.open()
 #     sleep(2)
 
-    num_angles: int = 100
-    max_angle: float = 90.0
-    time: float = 3.0
-    d_angle: float = max_angle / (num_angles-1)
-    print(f'd_angle = {d_angle}')
-    d_time: float = time / (num_angles-1)
-    
-    for i in range(num_angles):
-        angle: float = i * d_angle
-        print(angle)
-        gripper.set_angle(angle)
-        sleep(d_time)
+#     num_angles: int = 100
+#     max_angle: float = 90.0
+#     time: float = 3.0
+#     d_angle: float = max_angle / (num_angles-1)
+#     print(f'd_angle = {d_angle}')
+#     d_time: float = time / (num_angles-1)
+#     
+#     for i in range(num_angles):
+#         angle: float = i * d_angle
+#         print(angle)
+#         gripper.set_angle(angle)
+#         sleep(d_time)
         
     
+
