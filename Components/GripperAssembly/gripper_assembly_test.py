@@ -1,8 +1,13 @@
+#
+# gripper_assembly_test
+#
+# Version 2025_01_19_01
+#
 from servo import Servo
 from time import sleep
   
 ang_g0 = 75
-ang_g1 = 100
+ang_g1 = 120
 dang_g = ang_g1 - ang_g0
 gripper = Servo(pin_id=17)
 gripper.write(ang_g0)
@@ -15,7 +20,7 @@ lifter.write(ang_l0)
 
 
 num_steps = 100
-t_final = 0.25
+t_final = 1.0
 dt = t_final / (num_steps-1)
 
 for n in range(num_steps):
