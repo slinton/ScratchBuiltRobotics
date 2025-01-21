@@ -8,6 +8,8 @@ from ads1x15 import ADS1115
 from ble_server import BLEServer
 from time import sleep
 
+# TODO: should this just send -99 to 99? Or even -10 to 10?
+
 class BLEJoystickController(BLEServer):
     def __init__(self, i2c, left: int, right: int, name:str="JoystickController", led: int=None, debug: bool=False)-> None:
         BLEServer.__init__(self, 
