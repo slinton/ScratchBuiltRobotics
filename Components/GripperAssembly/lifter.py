@@ -1,15 +1,23 @@
 #
-# Gripper
+# Lifter
 #
-# Version 25_01_19_01
+# Version 25_01_20_01
 #
-# Gripper part only.
+#
 #
 from servo import Servo
+from time import sleep
+import uasyncio as asyncio
+
+# TODO: use an enum for the state?
+# Is the use of the two types of angles worth the trouble?
 
 class Lifter:
     """Implement the gripper lifter mechanism
     """
+    STOPPED = 'stopped'
+    LIFTING = 'lifting'
+    LOWERING = 'lowering'
 
     def __init__(self,
                  pin: int=16,
@@ -34,7 +42,24 @@ class Lifter:
         self.sign: float = 1 if self.servo_bottom_angle > self.servo_top_angle else -1
         self.angle: float | None = None
         
-    def lift(self, time:float = None) -> None:
+        self.state = Lifter.STOPPED
+        
+    def start_lift(self) -> None:
+        if not self.state == Lifter.LIFTING:
+            print('start_lift')
+            self.state = Lifter.LIFTING
+        
+    def stop(self) -> None:
+        if not self.state == Lifter.STOPPED:
+            print('stop')
+            self.state = Lifter.STOPPED
+        
+    def start_lower(self) -> None:
+        if not self.state == Lifter.LOWERING:
+            print('stop')
+            self.state = Lifter.LOWERING
+        
+    def lift(self, time: float = None) -> None:
         """Move gripper to the top
         """
         if time == None or self.angle == None:
@@ -63,7 +88,7 @@ class Lifter:
         if self.top_angle < new_angle < self.bottom_angle:
             self.set_angle(new_angle)
 
-    def move_to(self, end_angle: float, time: float, num_angles:int = 100):
+    def move_to(self, end_angle: float, time: float, num_angles: int = 100):
         """Move from the current angle to the end angle (in degrees) in the given amount of
         time (in seconds). 
 
@@ -74,7 +99,7 @@ class Lifter:
         """
         self._move(self.angle, end_angle, time, num_angles)
         
-    def _move(self, start_angle: float, end_angle: float, time: float, num_angles:int = 10):
+    def _move(self, start_angle: float, end_angle: float, time: float, num_angles: int = 100):
         """Move from the start angle to the end angle (in degrees) in the given amount of
         time (in seconds). 
         Caution: if the start_angle is not the current angle, this will start with an abrupt
@@ -104,7 +129,8 @@ class Lifter:
         return self.angle
         
     def set_angle(self, angle: float) -> None:
-        """Set angle of gripper. O represents closed.
+        """Set angle of gripper. O represents closed. All other methods should call
+        this one.
 
         Args:
             angle (float): angle of gripper. 
@@ -114,28 +140,47 @@ class Lifter:
         self.angle = angle
         
     def _set_servo_angle(self, servo_angle: float) -> None:
-        """Helper function to set servo angle based
+        """Helper function to set servo angle based. This actually moves the servo
 
         Args:
             servo_angle (float): servo angle in degrees
         """
         servo_angle: float = self._clamp(servo_angle, self.servo_bottom_angle, self.servo_top_angle)
-        #servo_angle: float = min(self.servo_bottom_angle, max(self.servo_top_angle, servo_angle))
         print(f'Lifter servo angle = {servo_angle:.0f}')
         self.servo.write(servo_angle)
-        #sleep(0.1)
         
     def _clamp(self, value: float, start: float, end: float) -> float:
         """Return value clamped between the other two values"""
         min_value = min(value, min(start, end))
         max_value = max(value, max(start, end))
         return min(max_value, max(min_value, value))
+    
+    async def run_loop(self)-> None:
+        while True:
+            try:
+                if self.state == Lifter.LIFTING:
+                    while self.state == Lifter.LIFTING:
+                        #print('-', end='')
+                        self.move_by(-2)
+                        await asyncio.sleep_ms(10)
+                elif self.state == Lifter.LOWERING:
+                    while self.state == Lifter.LOWERING:
+                        #print('+', end='')
+                        self.move_by(2)
+                        await asyncio.sleep_ms(10)
+                else:
+                    await asyncio.sleep_ms(10)
+            except Exception as e:
+                print(f'Exception: {e}')
+                self.state = Lifter.STOPPED
         
 if __name__ == '__main__':
     lifter = Lifter()
     lifter.lift()
     sleep(0.5)
     lifter.lower()
+    sleep(0.5)
+    lifter.lift()
     
     
 #     for _ in range(5):
