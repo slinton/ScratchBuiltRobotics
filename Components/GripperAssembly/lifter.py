@@ -158,18 +158,17 @@ class Lifter:
     async def run_loop(self)-> None:
         while True:
             try:
-                if self.state == Lifter.LIFTING:
-                    while self.state == Lifter.LIFTING:
-                        #print('-', end='')
-                        self.move_by(-2)
-                        await asyncio.sleep_ms(10)
-                elif self.state == Lifter.LOWERING:
-                    while self.state == Lifter.LOWERING:
-                        #print('+', end='')
-                        self.move_by(2)
-                        await asyncio.sleep_ms(10)
-                else:
+                while self.state == Lifter.LIFTING:
+                    self.move_by(-2)
                     await asyncio.sleep_ms(10)
+                
+                while self.state == Lifter.LOWERING:
+                    self.move_by(2)
+                    await asyncio.sleep_ms(10)
+
+                if self.state == Lifter.STOPPED:
+                    await asyncio.sleep_ms(10)
+                    
             except Exception as e:
                 print(f'Exception: {e}')
                 self.state = Lifter.STOPPED

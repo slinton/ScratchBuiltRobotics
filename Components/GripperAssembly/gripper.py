@@ -146,19 +146,17 @@ class Gripper:
     async def run_loop(self)-> None:
         while True:
             try:
-                # TODO: eliminate if
-                if self.state == Gripper.OPENING:
-                    while self.state == Gripper.OPENING:
-                        #print('-', end='')
-                        self.move_by(2)
-                        await asyncio.sleep_ms(10)
-                elif self.state == Gripper.CLOSING:
-                    while self.state == Gripper.CLOSING:
-                        #print('+', end='')
-                        self.move_by(-2)
-                        await asyncio.sleep_ms(10)
-                else:
+                while self.state == Gripper.OPENING:
+                    self.move_by(2)
                     await asyncio.sleep_ms(10)
+              
+                while self.state == Gripper.CLOSING:
+                    self.move_by(-2)
+                    await asyncio.sleep_ms(10)
+
+                if self.state == Gripper.STOPPED:
+                    await asyncio.sleep_ms(10)
+                    
             except Exception as e:
                 print(f'Exception: {e}')
                 self.state = Gripper.STOPPED
