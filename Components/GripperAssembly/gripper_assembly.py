@@ -1,7 +1,7 @@
 #
 # Gripper Assembly
 #
-# Version 25_01_20_01
+# Version 25_01_22_01
 #
 from ble_client import BLEClient
 from machine import SPI,Pin
@@ -25,7 +25,7 @@ class GripperAssembly:
         self.lifter = Lifter(pin=lifter_pin)
         
         sleep(0.5)
-        #self.gripper.close()
+        self.gripper.close()
         self.lifter.lift()
         sleep(0.5)
        
@@ -35,6 +35,14 @@ class GripperAssembly:
         vals = (int(values[0], 16), int(values[1], 16), int(values[2], 16), int(values[3], 16), int(values[4]) % 2, int(values[4]) //2)
         print(vals)
         
+        # TODO: clean up this ugliness
+        if vals[1] - 13447 > 400:
+            self.gripper.start_open()
+        elif vals[1] - 13447 < -400:
+            self.gripper.start_close()
+        else:
+            self.gripper.stop()
+            
         # TODO: clean up this ugliness
         if vals[3] - 13447 > 400:
             self.lifter.start_lower()
@@ -70,7 +78,9 @@ class GripperAssembly:
         
     async def run_loop(self)-> None:
         #await self.ble_client.run_loop()
-        await asyncio.gather(self.ble_client.run_loop(), self.lifter.run_loop())
+        await asyncio.gather(self.ble_client.run_loop(),
+                             self.lifter.run_loop(),
+                             self.gripper.run_loop())
         
 
 if __name__ == '__main__':

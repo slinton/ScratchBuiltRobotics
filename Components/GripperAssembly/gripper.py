@@ -1,15 +1,23 @@
 #
 # Gripper
 #
-# Version 25_01_19_01
+# Version 25_01_22_01
 #
 #
 from servo import Servo
 from time import sleep
+import uasyncio as asyncio
+
+# TODO: use an enum for the state?
+# Is the use of the two types of angles worth the trouble?
+# Is there a base class that could make this cleaner?
 
 class Gripper:
     """Implement the gripper
     """
+    STOPPED = 'stopped'
+    OPENING = 'opening'
+    CLOSING = 'closing'
 
     def __init__(self, pin: int=17, servo_close_angle: float = 70.0, servo_open_angle: float=160.0, ) -> None:
         """Initializer
@@ -29,6 +37,7 @@ class Gripper:
         self.open_angle: float = abs(self.servo_open_angle - self.servo_close_angle)
         self.sign: float = 1 if self.servo_open_angle > self.servo_close_angle else -1
         self.angle: float | None = None
+        self.state = Gripper.STOPPED
         
     def open(self, time:float = None) -> None:
         """Open the gripper completely
@@ -118,6 +127,41 @@ class Gripper:
         servo_angle: float = min(self.servo_open_angle, max(self.servo_close_angle, servo_angle))
         print(f'Gripper servo angle = {servo_angle}')
         self.servo.write(servo_angle)
+        
+    def start_open(self) -> None:
+        if not self.state == Gripper.OPENING:
+            print('start_lift')
+            self.state = Gripper.OPENING
+        
+    def stop(self) -> None:
+        if not self.state == Gripper.STOPPED:
+            print('stop')
+            self.state = Gripper.STOPPED
+        
+    def start_close(self) -> None:
+        if not self.state == Gripper.CLOSING:
+            print('stop')
+            self.state = Gripper.CLOSING
+    
+    async def run_loop(self)-> None:
+        while True:
+            try:
+                # TODO: eliminate if
+                if self.state == Gripper.OPENING:
+                    while self.state == Gripper.OPENING:
+                        #print('-', end='')
+                        self.move_by(2)
+                        await asyncio.sleep_ms(10)
+                elif self.state == Gripper.CLOSING:
+                    while self.state == Gripper.CLOSING:
+                        #print('+', end='')
+                        self.move_by(-2)
+                        await asyncio.sleep_ms(10)
+                else:
+                    await asyncio.sleep_ms(10)
+            except Exception as e:
+                print(f'Exception: {e}')
+                self.state = Gripper.STOPPED
         
         
 if __name__ == '__main__':
