@@ -22,6 +22,7 @@ class ServoBase:
         self.angle_start = angle_start
         self.angle_end = angle_end
         self.sign = 1 if angle_end > angle_start else -1
+        self.angle_inc = 2 # degrees
         self.state = ServoBase.STOPPED
 
 
@@ -76,13 +77,15 @@ class ServoBase:
         """
         self.move_to_angle(self.angle_end, time)
 
-    def start_increasing(self) -> None:
+    def start_increasing(self, angle_inc: float = 2.0) -> None:
         """Used in conjunction with async run_loop to start moving
         the servo in the increasing direction
         """
         if not self.state == ServoBase.INCREASING:
             print('start_lift')
             self.state = ServoBase.INCREASING
+            if angle_inc:
+                self.angle_inc = angle_inc
         
     def stop(self) -> None:
         """Used in conjunction with async run_loop to stop movement
@@ -91,13 +94,15 @@ class ServoBase:
             print('stop')
             self.state = ServoBase.STOPPED
         
-    def start_decreasing(self) -> None:
+    def start_decreasing(self, angle_inc: float = -2.0) -> None:
         """Used in conjunction with async run_loop to start moving
         the sero in the decreasing direction
         """
         if not self.state == ServoBase.DECREASING:
             print('stop')
             self.state = ServoBase.DECREASING
+            if angle_inc:
+                self.angle_inc = angle_inc
     
     async def run_loop(self)-> None:
         """Async loop to run the servo movement. The assumption is some other 
@@ -106,11 +111,11 @@ class ServoBase:
         while True:
             try:
                 while self.state == ServoBase.INCREASING:
-                    self.move_by(2)
+                    self.move_by(self.angle_inc)
                     await asyncio.sleep_ms(10)
               
                 while self.state == ServoBase.DECREASING:
-                    self.move_by(-2)
+                    self.move_by(self.angle_inc)
                     await asyncio.sleep_ms(10)
 
                 if self.state == ServoBase.STOPPED:
@@ -131,3 +136,19 @@ class ServoBase:
             bool: True if the angle is within the range
         """
         return (self.angle_end - angle) * (angle - self.angle_start) >= 0
+    
+
+if __name__ == '__main__':
+    servo = ServoBase(pin=12, angle_start=0, angle_end=180)
+    servo.move_to_start()
+    sleep(0.5)
+        
+    servo.move_to_end()
+    sleep(0.5)
+        
+    servo.move_to_start(time=2)
+    sleep(0.5)
+        
+    servo.move_to_end(time=2)
+    sleep(0.5)
+        
