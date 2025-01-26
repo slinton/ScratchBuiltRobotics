@@ -4,8 +4,7 @@
 # Version 2025_01_25_01
 #
 # Note: this uses servo.py. That code could be included inside this class.
-import math
-from machine import Pin, PWM
+from servo import Servo
 from time import sleep
 import uasyncio as asyncio
 
@@ -19,48 +18,14 @@ class ServoBase:
     INCREASING = 'increasing'
     DECREASING = 'decreasing'
 
-    def __init__(self, 
-                 pin: int, 
-                 angle_start: float, 
-                 angle_end: float,
-                 min_us: float = 544.0,
-                 max_us: float = 2400.0,
-                 min_deg: float = 0.0,
-                 max_deg: float = 180.0,
-                 freq: int = 50
-                 ) -> None:
-        self.pwm = PWM(Pin(pin))
-        self.pwm.freq(freq)
-        self.current_us = 0.0
-        self._slope = (min_us-max_us)/(math.radians(min_deg)-math.radians(max_deg))
-        self._offset = min_us
+    def __init__(self, pin: int, angle_start: float, angle_end: float) -> None:
+        self.servo = Servo(pin_id=pin)
         self.angle_start = angle_start
         self.angle_end = angle_end
         self.sign = 1 if angle_end > angle_start else -1
         self.angle_inc = 2 # degrees
         self.state = ServoBase.STOPPED
 
-    def write(self, deg: float) -> None:
-        """Comamnd the servo to move to the given angle
-
-        Args:
-            deg (float): angle to move to (deg)
-        """
-        self.current_us = math.radians(deg) * self._slope + self._offset
-        self.pwm.duty_ns(int(self.current_us*1000.0))
-
-    def read(self) -> float:
-        """Return the current angle (deg) of the servo
-
-        Returns:
-            float: current angle (deg)
-        """
-        return math.degrees((self.current_us - self._offset)/self._slope)
-    
-    def off(self) -> None:
-        """Turn off the servo
-        """
-        self.pwm.duty_ns(0)
 
     def move_to_angle(self,  new_angle: float,  time: float | None = None, num_steps: int = 100) -> None:
         """Move to the given angle in the given time (seconds)
@@ -75,13 +40,13 @@ class ServoBase:
             raise ValueError('new_angle is not within the range of the servo')
         
         # Retrieve current angle
-        current_angle = self.read()
+        current_angle = self.servo.read()
         #print(f'Current angle: {current_angle}')
             
 
         # Move in a single step to the new angle
         if current_angle == None or time == None or num_steps < 2:
-            self.write(new_angle)
+            self.servo.write(new_angle)
             return
 
         # Move in multiple steps to the new angle
@@ -90,7 +55,7 @@ class ServoBase:
         for i in range(num_steps):
             angle: float = current_angle + i * angle_inc
             #print(f'angle: {angle}')
-            self.write(angle)
+            self.servo.write(angle)
             sleep(time_inc)
 
     def move_by(self, angle_inc: float) -> None:
@@ -99,14 +64,14 @@ class ServoBase:
         Args:
             angle_inc (float): angle increment (deg)
         """
-        current_angle = self.read()
+        current_angle = self.servo.read()
         
         if current_angle == None:
             raise ValueError('Unable to read current angle')
 
         new_angle = current_angle + angle_inc
         if self._angle_in_range(new_angle):
-            self.write(new_angle)
+            self.servo.write(new_angle)
 
 
     def move_to_start(self, time: float = None) -> None:

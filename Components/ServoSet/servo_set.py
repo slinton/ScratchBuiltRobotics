@@ -17,7 +17,7 @@ class ServoSet:
         self._i2c = i2c
 
 
-    def write(self, index, degrees=None) -> None:
+    def write(self, index, degrees) -> None:
         pass
         # span = self.max_duty - self.min_duty
         # if degrees is not None:
@@ -32,4 +32,10 @@ class ServoSet:
         #     return self.pca9685.duty(index)
         # duty = min(self.max_duty, max(self.min_duty, int(duty)))
         # self.pca9685.duty(index, duty)
+
+    def read(self, index) -> float:
+        pass
+        
+
+    # TODO: Add asynchronous
 
