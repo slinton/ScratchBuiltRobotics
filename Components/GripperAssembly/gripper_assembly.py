@@ -1,7 +1,7 @@
 #
 # Gripper Assembly
 #
-# Version 25_01_22_01
+# Version 25_01_25_01
 #
 from ble_client import BLEClient
 from machine import SPI,Pin
@@ -51,22 +51,6 @@ class GripperAssembly:
         else:
             self.lifter.stop()
         
-#         if vals[4] == 1:
-#             self.lifter.lift()
-#         elif vals[5] == 1:
-#             self.lifter.lower()
-#             
-#         lifter_angle_change = 0
-#         if vals[3] - 13447 > 400:
-#             lifter_angle_change = 10
-#         elif vals[3] - 13447 < -400:
-#             lifter_angle_change = -10
-#         #gripper_angle_change = GripperAssembly.gain * (vals[1] - 13447) / 13447
-#         #lifter_angle_change = GripperAssembly.gain * (vals[3] - 13447) / 13447
-#         print(f'----- {lifter_angle_change}')
-#         self.lifter.move_by(lifter_angle_change)
-        #lifter.set_angle(
-        
     def on_connected(self):
         print('Connected')
             
@@ -77,7 +61,6 @@ class GripperAssembly:
         asyncio.run(self.run_loop())
         
     async def run_loop(self)-> None:
-        #await self.ble_client.run_loop()
         await asyncio.gather(self.ble_client.run_loop(),
                              self.lifter.run_loop(),
                              self.gripper.run_loop())
@@ -86,4 +69,3 @@ class GripperAssembly:
 if __name__ == '__main__':
     gripper_assembly = GripperAssembly()
     asyncio.run(gripper_assembly.start())
-    
