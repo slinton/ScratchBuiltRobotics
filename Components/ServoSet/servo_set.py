@@ -2,6 +2,7 @@
 # ServoSet
 #
 import ustruct
+from math import radians
 from typing import Tuple, List
 from machine import I2C
 from time import sleep
@@ -11,7 +12,14 @@ class ServoSet:
     """Uses the PCA9685 to control a set of servos.
     """
 
-    def __init__(self, i2c: I2C, servo_infos: List[ServoInfo]) -> None:
+    def __init__(self, 
+                 i2c: I2C, 
+                 servo_infos: List[ServoInfo], 
+                 address: int = 0x40, 
+                 freq: int = 50, 
+                 min_us: int = 600, 
+                 max_us: int = 2400,
+                 max_angle_deg: float = 180) -> None:
         """_summary_
 
         Args:
@@ -20,8 +28,21 @@ class ServoSet:
         """
         self._i2c = i2c
         self._servo_infos = servo_infos
-        self._address = 0x40
+        self._address = address
+
+        # Compute min and max duty cycles (0-4095)
+        t_period_us: int = 1_000_000 / freq # period in us
+        min_duty: int = self._us2duty(min_us, t_period_us)
+        max_duty: int = self._us2duty(max_us, t_period_us)
+
+        # Slope and offset for converting angles (degrees) to duty cycles [0, 4095]
+        self._slope = (max_duty - min_duty) / max_angle_deg
+        self._offset = min_duty
+
         self.reset()
+
+    def _us2duty(self, t_us: int, t_period_us: float) -> int:
+        return int(4095 * t_us / t_period_us)
 
     def reset(self) -> None:
         self._write(0x00, 0x00) # Mode1
@@ -40,7 +61,6 @@ class ServoSet:
         data = ustruct.pack('<HH', 0, duty)
         self.i2c.writeto_mem(self.address, 0x06 + 4 * index,  data)
 
-
     def read(self, index: int) -> float:
         # TODO: Check this
         """Read the angle from the servo
@@ -55,7 +75,7 @@ class ServoSet:
         data = self.i2c.readfrom_mem(self.address, 0x06 + 4 * index, 1)[0]
         duty = ustruct.unpack('<HH', data)
         angle = self._duty_to_angle(duty)
-
+        return angle
 
     def move_to_angle(self, servo_angles: Tuple[int, float], time: float | None = None, num_steps: int = 100) -> None:
         """Move to the given angle in the given time (seconds)
@@ -84,25 +104,43 @@ class ServoSet:
                 self.write(index, angle)
                 sleep(time_inc)
 
-
-    def _angle_to_duty(self, angle: float) -> int:
+    def _angle_to_duty(self, angle_deg: float) -> int:
         """Convert the angle to a duty cycle
 
         Args:
-            angle (float): angle to convert to a duty cycle
+            angle_deg (float): angle in deg to convert to a duty cycle
 
         Returns:
-            int: duty cycle
+            int: duty cycle [0, 4095]
         """
-        pass 
+        return int(self._offset + self._slope * angle_deg)
 
     def _duty_to_angle(self, duty: int) -> float:
         """Convert the duty cycle to an angle
 
         Args:
-            duty (int): duty cycle to convert to an angle
+            duty (int): duty cycle [0, 4095] to convert to an angle
 
         Returns:
-            float: angle
+            float: angle in deg
         """
-        pass
+        return float(duty - self._offset) / self._slope
+    
+
+if __name__ == "__main__":
+    # Test code
+    from servo_info import ServoInfo
+    from machine import I2C
+
+    # Create I2C object
+    i2c = I2C(0, sda=0, scl=1)
+
+    # Create servo info objects
+    servo_infos = [ServoInfo(0, 0, 180), ServoInfo(1, 0, 180)]
+
+    # Create ServoSet object
+    servo_set = ServoSet(i2c, servo_infos)
+
+    # Move servos to angles
+    servo_set.move_to_angle([(0, 170), (1, 170)], time=1, num_steps=100)
+    servo_set.move_to_angle([(0, 10), (1, 10)], time=1, num_steps=100)

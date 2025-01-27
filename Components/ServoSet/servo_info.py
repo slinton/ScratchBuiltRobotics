@@ -3,12 +3,12 @@
 #
 class ServoInfo:
     def __init__(self, 
-                 name: str,
                  index: int,
                  angle_start: float, 
-                 angle_end: float
+                 angle_end: float,
+                 name: str | None = None,
                  ) -> None:
-        self.name = name
+        if name == None | name == '': self.name = f'Servo: {str(index)}'
         self.index = index
         self.angle_start = angle_start
         self.angle_end = angle_end
@@ -18,6 +18,7 @@ class ServoInfo:
     def name(self) -> str:
         return self._name
     
-    def _angle_in_range(self, angle: float) -> bool:
+    def angle_in_range(self, angle: float) -> bool:
         return  (self.angle_end - angle) * (angle - self.angle_start) >= 0
+    
    

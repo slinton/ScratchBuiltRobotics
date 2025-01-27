@@ -77,7 +77,6 @@ class ServoBase:
         # Retrieve current angle
         current_angle = self.read()
         #print(f'Current angle: {current_angle}')
-            
 
         # Move in a single step to the new angle
         if current_angle == None or time == None or num_steps < 2:
