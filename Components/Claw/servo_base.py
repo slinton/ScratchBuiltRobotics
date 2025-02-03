@@ -3,7 +3,6 @@
 #
 # Version 2025_01_25_01
 #
-# Note: this uses servo.py. That code could be included inside this class.
 import math
 from machine import Pin, PWM
 from time import sleep
