@@ -3,6 +3,8 @@
 # March 2021
 '''
 @author Kevin McAleer
+
+Added in test method
 '''
 
 import ustruct
@@ -49,13 +51,17 @@ class PCA9685:
         self._write(0x00, old_mode | 0xa1) # Mode 1, autoincrement on
 
     def pwm(self, index, on=None, off=None):
+        address = 0x06 + 4 * index
+#         print(f'pwm {on=} {off=} {address=')
         if on is None or off is None:
-            data = self.i2c.readfrom_mem(self.address, 0x06 + 4 * index, 4)
+            data = self.i2c.readfrom_mem(self.address, address, 4)
             return ustruct.unpack('<HH', data)
         data = ustruct.pack('<HH', on, off)
         self.i2c.writeto_mem(self.address, 0x06 + 4 * index,  data)
-
+        print(f'pwm {on=} {off=} {data=} {address=} {self.address=}')
+        
     def duty(self, index, value=None, invert=False):
+        print(f'duty: {value=}')
         if value is None:
             pwm = self.pwm(index)
             if pwm == (0, 4096):

@@ -1,8 +1,9 @@
 # servo.py
 # Kevin McAleer
 # March 2021
+# Added in test method - SL
 
-from pca import PCA9685
+from pca9685 import PCA9685
 import math
 
 
@@ -33,7 +34,37 @@ class Servos:
         else:
             return self.pca9685.duty(index)
         duty = min(self.max_duty, max(self.min_duty, int(duty)))
+        print(f'position {degrees=} {duty=}')
         self.pca9685.duty(index, duty)
 
     def release(self, index):
         self.pca9685.duty(index, 0)
+        
+        
+        
+        
+if __name__ == "__main__":
+    # Test code
+    from machine import I2C
+    from time import sleep
+
+    # Create I2C object
+    i2c = I2C(0, sda=0, scl=1)
+    print(f'Found {len(i2c.scan())} i2c devices.')
+    
+    # Create servo info objects
+    servos = Servos(i2c)
+    
+    i2c.writeto_mem(0x40, 0x06,  b'\x00\x00\x8e\x00')
+    sleep(0.5)
+    i2c.writeto_mem(0x40, 0x06, b'\x00\x00\xd6\x01')
+    sleep(0.5)
+    i2c.writeto_mem(0x40, 0x06,  b'\x00\x00\x8e\x00')
+    
+    
+#     
+#     servos.position(0, degrees=10)
+#     sleep(0.5)
+#     servos.position(0, degrees=170)
+#     sleep(0.5)
+
