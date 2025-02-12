@@ -1,6 +1,8 @@
 #
 # mpu6050.py
 #
+# V2025_02_11_1
+#
 # Pins
 # ----
 # 3V3 - VCC
@@ -15,6 +17,9 @@ from machine import Pin, I2C
 i2c = I2C(0, sda=Pin(0), scl=Pin(1), freq=400000)
 imu = InertialSensor(i2c, heading_threshold=0.3)
 imu.calibrate()
+sleep(3)
+
+a: float = 0
 
 while True:
     ax=round(imu.accel.x,2)
@@ -28,5 +33,7 @@ while True:
     #print(f'{{gx},{gy},{gz')
     #print(f'{temp}')
     imu.update()
-    print(f'{imu.raw_heading}')
+    #print(f'{imu.raw_heading}')
+    print(f'{imu.a:.2f} {imu.v:.2f} {imu.x:.2f}')
     sleep(0.01)
+
