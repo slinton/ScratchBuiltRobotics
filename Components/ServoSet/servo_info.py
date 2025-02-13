@@ -1,7 +1,7 @@
 #
 # ServoInfo
 #
-# V2025_02_12_01
+# V2025_02_12_03
 #
 class ServoInfo:
     def __init__(self, 
@@ -33,13 +33,29 @@ class ServoInfo:
     
     @angle.setter
     def angle(self, value: float) -> None:
-        self._angle = value;
+        self._angle = value
     
     def angle_in_range(self, angle: float) -> bool:
+        """Return True if the angle is within the range of motion of the servo.
+
+        Args:
+            angle (float): angle in degrees to check
+
+        Returns:
+            bool: true if the angle is within the range of motion
+        """
         return  (self._angle_end - angle) * (angle - self._angle_start) >= 0.0
     
-    def angle_from_percentage(self, percentage: float) -> float:
-        return self._angle_start + percentage * (self._angle_end - self._angle_start)
+    def angle_from_theta(self, theta: float) -> float:
+        """Get the angle from a normalized angle value. 0.0 is angle_start, 1.0 is angle_end.
+
+        Args:
+            theta (float): normalized angle value [0.0, 1.0]
+
+        Returns:
+            float: angle in degrees
+        """
+        return self._angle_start + theta * (self._angle_end - self._angle_start)
     
     def __str__(self) -> str:
         return f'Servo Info {self._name} at index {self._index}. Angle: {self._angle} Range: {self._angle_start}-{self._angle_end}'
