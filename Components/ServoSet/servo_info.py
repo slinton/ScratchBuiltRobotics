@@ -1,13 +1,13 @@
 #
 # ServoInfo
 #
-# V2025_02_11_01
+# V2025_02_12_01
 #
 class ServoInfo:
     def __init__(self, 
                  index: int,
-                 angle_start: float = 0.0, 
-                 angle_end: float = 180.0,
+                 angle_start: float = 0.0, # Fully flexed
+                 angle_end: float = 180.0, # Fully extended
                  name = None, # name: str | None = None
                  ) -> None:
         self._name: str = f'Servo: {str(index)}' if name is None or name == '' else name
@@ -22,6 +22,10 @@ class ServoInfo:
         return self._name
     
     @property
+    def index(self) -> int:
+        return self._index
+    
+    @property
     def angle(self) -> float:
         if self._angle is None:
             raise ValueError('Angle has not been set!')
@@ -34,7 +38,10 @@ class ServoInfo:
     def angle_in_range(self, angle: float) -> bool:
         return  (self._angle_end - angle) * (angle - self._angle_start) >= 0.0
     
+    def angle_from_percentage(self, percentage: float) -> float:
+        return self._angle_start + percentage * (self._angle_end - self._angle_start)
+    
     def __str__(self) -> str:
-        return f'Servo Info {self._name} at index {self._index}. Angles {self._angle_start}-{self._angle_end}'
+        return f'Servo Info {self._name} at index {self._index}. Angle: {self._angle} Range: {self._angle_start}-{self._angle_end}'
     
    

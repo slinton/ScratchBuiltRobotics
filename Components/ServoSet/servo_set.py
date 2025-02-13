@@ -1,11 +1,10 @@
 #
 # ServoSet
 #
-# V2025_02_11_01
+# V2025_02_12_01
 #
 import ustruct
 from math import radians
-# from typing import Tuple, List (Not supported in MicroPython)
 from machine import I2C
 from time import sleep, sleep_us
 from servo_info import ServoInfo
@@ -16,7 +15,6 @@ class ServoSet:
 
     def __init__(self, 
                  i2c: I2C, 
-                 #servo_infos: List[ServoInfo],
                  servo_infos,
                  address: int = 0x40, 
                  freq: float = 50, 
@@ -37,7 +35,6 @@ class ServoSet:
         t_period_us: int = 1_000_000 / freq # period in us
         min_duty: float = self._us2duty(min_us, t_period_us)
         max_duty: float = self._us2duty(max_us, t_period_us)
-        print(f'{min_duty=} {max_duty=}')
 
         # Slope and offset for converting angles (degrees) to duty cycles [0, 4095]
         self._slope: float = (max_duty - min_duty) / max_angle_deg
@@ -45,14 +42,17 @@ class ServoSet:
 
         self.reset()
         self.set_freq(freq)
-
+        
+        # Set all servo angles
+        for servo_info in self._servo_infos:
+            servo_info.angle = self.read(servo_info.index)
+            print(f'{servo_info}')
+            
     def _us2duty(self, t_us: float, t_period_us: float) -> int:
         return int(4095 * t_us / t_period_us)
 
     def reset(self) -> None:
-        print('reset...', end='')
         self._write(0x00, 0x00) # Mode1
-        print('done')
         
     def set_freq(self, freq=None):
         if freq is None:
@@ -71,7 +71,6 @@ class ServoSet:
     def _read(self, address):
         return self._i2c.readfrom_mem(self._address, address, 1)[0]
         
-
     def write(self, index: int, angle: float) -> None:
         """Write the angle to the servo
 
@@ -82,15 +81,12 @@ class ServoSet:
         # Find duty cycle from angle
         duty = self._angle_to_duty(angle)
         address = 0x06 + 4 * index
-        print(f'write: {index=} {duty=} {address=} {self._address=}')
         
         # Create data to write to I2C
         data = ustruct.pack('<HH', 0, duty)
-        print(f'write {data=}')
         self._i2c.writeto_mem(self._address, address,  data)
 
     def read(self, index: int) -> float:
-        # TODO: Check this
         """Read the angle from the servo
 
         Args:
@@ -100,41 +96,76 @@ class ServoSet:
             float: angle of the servo
         """
         # Read the duty cycle from the servo
-        data = self._i2c.readfrom_mem(self._address, 0x06 + 4 * index, 1)[0]
-        print(f'{data=}')
-        duty = ustruct.unpack('<HH', data)
-        print(f'{duty=}')
+        address = 0x06 + 4 * index
+        data = self._i2c.readfrom_mem(self._address, address, 4)
+        duty = ustruct.unpack('<HH', data)[1]
         angle = self._duty_to_angle(duty)
         return angle
 
-    # def move_to_angle(self, servo_angles: Tuple[int, float], time: float | None = None, num_steps: int = 100) -> None:
-    def move_to_angle(self, servo_angles, time: float | None = None, num_steps: int = 100) -> None:
-        """Move to the given angle in the given time (seconds)
+    def move_to_angle(self, index: int, angle: float, time: float | None = None, num_steps: int | None = None) -> None:
+        """Move the specified servo to the given angle in the given time (seconds)
 
         Args:
-            servo_info (Tuple[int, float]): servo index and angle to move to (deg)
+            index (int) servo index
+            angle (float) angle to move to in degrees
             time (float): time (in seconds) to move between angles
             num_steps (int): number of steps to take in the movement
         """ 
         # Loop over all requested angle values
-        for index, angle in servo_angles:
-            servo_info = self._servo_infos[index]
+        servo_info = self._servo_infos[index]
 
-            # Check to make sure the new_angle is within the limits
-            if not servo_info.angle_in_range(angle):
-                raise ValueError('new_angle is not within the range of the servo')
+        # Check to make sure the new_angle is within the limits
+        if not servo_info.angle_in_range(angle):
+            raise ValueError('new_angle is not within the range of the servo')
             
-            # Retrieve current angle
-            current_angle = self.read(index)
+        # Retrieve current angle
+        current_angle = self.read(index)
+        
+        if num_steps is None:
+            num_steps = abs(int(angle - current_angle)) # 1 degree per step 
 
-            # Move in a single step to the new angle
-            angle_inc: float = angle - current_angle
-            time_inc: float = time / (num_steps - 1)
-            for i in range(num_steps):
-                angle: float = current_angle + i * angle_inc
-                self.write(index, angle)
+        # Incrementally move to the new angle
+        num_steps = max(1, num_steps)
+        angle_inc: float = (angle - current_angle) / num_steps
+        time_inc: float = time / (num_steps - 1)
+        for n in range(num_steps):
+            angle: float = current_angle + n * angle_inc
+            self.write(index, angle)
+            sleep(time_inc)
+
+
+    def move_to_angles(self, servo_angles, time: float | None = None, num_steps: int = 100) -> None:
+        """Move the specified servo to the given angle in the given time (seconds)
+
+        Args:
+            servo_angles list of tuples with index, angle values
+            index (int) servo index
+            angle (float) angle to move to in degrees
+            time (float): time (in seconds) to move between angles
+            num_steps (int): number of steps to take in the movement
+        """
+        
+        # Set starting angles for all servos
+        for index, _ in servo_angles:
+            self._servo_infos[index].angle = self.read(index)
+            
+        # Create time increment. Note: could be more sophisticated
+        num_steps = max(1, num_steps)
+        time_inc: float = time / (num_steps - 1)
+        
+        for n in range(num_steps, 0, -1):
+            
+            for index, angle_end in servo_angles:
+                servo_info = self._servo_infos[index]
+                
+                angle_inc = (angle_end - servo_info.angle) / n
+                new_angle: float = servo_info.angle + angle_inc
+                
+                self.write(index, new_angle)
+                servo_info.angle = new_angle
+                
                 sleep(time_inc)
-
+            
     def _angle_to_duty(self, angle_deg: float) -> int:
         """Convert the angle to a duty cycle
 
@@ -168,12 +199,6 @@ if __name__ == "__main__":
     i2c = I2C(0, sda=0, scl=1)
     print(f'Found {len(i2c.scan())} i2c devices.')
     
-#     i2c.writeto_mem(0x40, 0x06,  b'\x00\x00\x8e\x00')
-#     sleep(0.5)
-#     i2c.writeto_mem(0x40, 0x06, b'\x00\x00\xd6\x01')
-#     sleep(0.5)
-#     i2c.writeto_mem(0x40, 0x06,  b'\x00\x00\x8e\x00')
-    
     # Create servo info objects
     servo_infos = [ServoInfo(0, 0, 180), ServoInfo(1, 0, 180)]
     for servo_info in servo_infos:
@@ -183,11 +208,23 @@ if __name__ == "__main__":
     servo_set = ServoSet(i2c, servo_infos)
     
     servo_set.write(0, 10)
-    sleep(0.5)
+    print(servo_set.read(0))
+    sleep(1)
+    
     servo_set.write(0, 170)
-    sleep(0.5)
+    sleep(1)
+    print(servo_set.read(0))
+    
     servo_set.write(0, 10)
+    print(servo_set.read(0))
+    sleep(1)
 
     # Move servos to angles
-#     servo_set.move_to_angle([(0, 170), (1, 170)], time=1, num_steps=100)
-#     servo_set.move_to_angle([(0, 10), (1, 10)], time=1, num_steps=100)
+    servo_set.move_to_angle(0, 170, time=4.0)
+    sleep(2)
+    
+    t = 0.5
+    servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
+    servo_set.move_to_angles([(0, 40), (1, 80)], time=t)
+    servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
+    servo_set.move_to_angles([(0, 40), (1, 80)], time=1.0)
