@@ -15,8 +15,6 @@ async def boop():
         print('boop')
         await asyncio.sleep(1)
         
-    
-
 async def main():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(beep())
