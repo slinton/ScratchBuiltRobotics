@@ -1,8 +1,9 @@
 #
 # Gesture
 #
-# V2025_02_17_01
+# V2025_02_17_02
 #
+
 class Gesture:
     """Encapsulates a sequence of angles over (normalized) time for a set of servos.
     The angles are the logical values for the servos in degrees
@@ -71,7 +72,29 @@ class Gesture:
                 print(f'{self._angles[j][i]:3.0f}', end='\t ')
             print()
 
+    def __add__(self, other: 'Gesture') -> 'Gesture':
+        """Add two gestures together, one after the other
+        """
+        num_servos: int = len(self._indices)
 
+        # Check that the indices match
+        if num_servos != len(other._indices):
+            raise ValueError('Number of servos does not match.')
+        for i in range(num_servos):
+            if self._indices[i] != other._indices[i]:
+                raise ValueError('Servo indices do not match.')
+            
+        # Create new times values. # TODO: what about time = 0.5
+        new_times: list[float] = [0.5*time for time in self._times]
+        new_times += [0.5 + 0.5*time for time in other._times]
+
+        # Combine angle values
+        new_angles: list[list[float]] = [[] for _ in range(num_servos)]
+        for i in range(num_servos):
+            new_angles[i] = self._angles[i] + other._angles[i]
+        
+        return Gesture(new_times, self._indices, new_angles, f'{self._name} + {other._name}') 
+    
 if __name__ == '__main__':
     # Test code
     from time import sleep

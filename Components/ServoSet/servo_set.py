@@ -1,7 +1,7 @@
 #
 # ServoSet
 #
-# V2025_02_17_01
+# V2025_02_17_02
 #
 # TODO: Servo angles versus logical angles
 #
@@ -151,7 +151,7 @@ class ServoSet:
             self.write(index, angle)
             sleep(time_inc)
 
-    def move_to_angles(self, servo_angles: tuple[int, float], time: float | None = None, num_steps: int = 100) -> None:
+    def move_to_angles(self, servo_angles: list[tuple[int, float]], time: float | None = None, num_steps: int = 100) -> None:
         """Move the specified servo to the given logical angles in the given time (seconds)
 
         Args:
@@ -242,11 +242,10 @@ if __name__ == "__main__":
     
     # Create servo info objects
     servo_infos =[
-        ServoInfo(index=0, servo_angle_0 = 107, sign = 1),
-        ServoInfo(index=1, servo_angle_0 = 20, sign = 1),
-        ServoInfo(index=2, servo_angle_0 = 125, sign = 1),
+        ServoInfo(index=0, servo_angle_0 = 107, sign = -1, name='lower-leg'),
+        ServoInfo(index=1, servo_angle_0 = 20, sign = 1, name='upper-leg'),
+        ServoInfo(index=2, servo_angle_0 = 125, sign = -1, name='shoulder'),
     ]
-    # servo_infos = [ServoInfo(0, 0, 180), ServoInfo(1, 0, 180)]
     for servo_info in servo_infos:
         print(servo_info)
 
@@ -258,26 +257,30 @@ if __name__ == "__main__":
     sleep(1)
     
     servo_set.write(0, 170)
-    sleep(1)
     print(servo_set.read(0))
+    sleep(1)
     
     servo_set.write(0, 10)
     print(servo_set.read(0))
     sleep(1)
 
     # Move servos to angles
-    servo_set.move_to_angle(0, 170, time=4.0)
-    sleep(2)
-    
-    t = 0.5
-    servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
-    servo_set.move_to_angles([(0, 40), (1, 80)], time=t)
-    servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
-    servo_set.move_to_angles([(0, 40), (1, 80)], time=1.0)
+#     servo_set.move_to_angle(0, 170, time=4.0)
+#     sleep(2)
+#     
+#     t = 0.5
+#     servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
+#     servo_set.move_to_angles([(0, 40), (1, 80)], time=t)
+#     servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
+#     servo_set.move_to_angles([(0, 40), (1, 80)], time=1.0)
+
+    print('Moving to zero angles...', end='')
+    servo_set.move_to_angles([(0, 0), (1, 0), (2, 0),], time=1.0)
+    print('done.')
     
     # Gesture
-    print('Executing Gesture')
-    gesture = Gesture(
+    print('Executing Gesture...', end='')
+    lower_leg_gesture: Gesture = Gesture(
         [0, 0.25, 0.5, 0.75, 1.0],
         [0, 1, 2], 
         [
@@ -285,4 +288,28 @@ if __name__ == "__main__":
             [0.0, 0.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 0.0]
         ])
-    servo_set.execute_gesture(gesture, 2, 10)
+    upper_leg_gesture: Gesture = Gesture(
+        [0, 0.25, 0.5, 0.75, 1.0],
+        [0, 1, 2], 
+        [
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 40.0, 90.0, 40.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0]
+        ])
+    shoulder_gesture: Gesture = Gesture(
+        [0, 0.25, 0.5, 0.75, 1.0],
+        [0, 1, 2], 
+        [
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, -45.0, 0.0, 45.0, 0.0]
+        ])
+    
+    servo_set.execute_gesture(lower_leg_gesture, 2, 100)
+    #servo_set.execute_gesture(upper_leg_gesture, 2, 100)
+    #servo_set.execute_gesture(shoulder_gesture, 2, 100)
+
+    gesture: Gesture = lower_leg_gesture + upper_leg_gesture + shoulder_gesture
+    servo_set.execute_gesture(gesture, 2, 100)
+    
+    print('done.')

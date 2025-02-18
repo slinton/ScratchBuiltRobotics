@@ -43,3 +43,4 @@ while not command.lower() in ['quit', 'q', 'x']:
         print(f'Command could not be interpreted. {e} Should be of form "index angle" or "x" to quit')
         
     command = input('\nCommand: ')
+
