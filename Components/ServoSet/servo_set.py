@@ -1,12 +1,13 @@
 #
 # ServoSet
 #
-# V2025_02_12_03
+# V2025_02_17_01
+#
+# TODO: Servo angles versus logical angles
 #
 import ustruct
-from math import radians
 from machine import I2C
-from time import sleep, sleep_us
+from time import sleep, sleep_us, ticks_us
 from servo_info import ServoInfo
 from gesture import Gesture
 
@@ -37,7 +38,7 @@ class ServoSet:
         min_duty: float = self._us2duty(min_us, t_period_us)
         max_duty: float = self._us2duty(max_us, t_period_us)
 
-        # Slope and offset for converting angles (degrees) to duty cycles [0, 4095]
+        # Slope and offset for converting servo angles (degrees) to duty cycles [0, 4095]
         self._slope: float = (max_duty - min_duty) / max_angle_deg
         self._offset: float = min_duty
 
@@ -46,7 +47,8 @@ class ServoSet:
         
         # Set all servo angles
         for servo_info in self._servo_infos:
-            servo_info.angle = self.read(servo_info.index)
+            servo_angle: float = self.read(servo_info.index)
+            servo_info.angle = servo_info.get_angle(servo_angle)
             print(f'{servo_info}')
             
     def _us2duty(self, t_us: float, t_period_us: float) -> int:
@@ -55,11 +57,9 @@ class ServoSet:
     def reset(self) -> None:
         self._write(0x00, 0x00) # Mode1
         
-    def set_freq(self, freq=None):
-        if freq is None:
-            return int(25000000.0 / 4096 / (self._read(0xfe) - 0.5))
-        prescale = int(25000000.0 / 4096.0 / freq + 0.5)
-        old_mode = self._read(0x00) # Mode 1
+    def set_freq(self, freq: float):
+        prescale: int = int(25000000.0 / 4096.0 / freq + 0.5)
+        old_mode: int = self._read(0x00) # Mode 1
         self._write(0x00, (old_mode & 0x7F) | 0x10) # Mode 1, sleep
         self._write(0xfe, prescale) # Prescale
         self._write(0x00, old_mode) # Mode 1
@@ -67,20 +67,35 @@ class ServoSet:
         self._write(0x00, old_mode | 0xa1) # Mode 1, autoincrement on
         
     def _write(self, address: int, value: int) -> None:
+        """Write value to the I2C address
+
+        Args:
+            address (int): I2C address
+            value (int): value
+        """
         self._i2c.writeto_mem(self._address, address, bytearray([value]))
 
-    def _read(self, address: int) -> None:
+    def _read(self, address: int) -> int:
+        """Read value from the I2C address
+
+        Args:
+            address (int): I2C address
+
+        Returns:
+            int: value read from the address
+        """
         return self._i2c.readfrom_mem(self._address, address, 1)[0]
         
     def write(self, index: int, angle: float) -> None:
-        """Write the angle to the servo
+        """Move the servo with the given index to the specified logical angle
 
         Args:
             index (int): index of the servo
-            angle (float): angle to write to the servo
+            angle (float): logical angle in degrees to write to the servo
         """
         # Find duty cycle from angle
-        duty = self._angle_to_duty(angle)
+        servo_angle: float = self._servo_infos[index].get_servo_angle(angle)
+        duty = self._angle_to_duty(servo_angle)
         address = 0x06 + 4 * index
         
         # Create data to write to I2C
@@ -88,7 +103,7 @@ class ServoSet:
         self._i2c.writeto_mem(self._address, address,  data)
 
     def read(self, index: int) -> float:
-        """Read the angle from the servo
+        """Read the logical angle from the servo with the given index
 
         Args:
             index (int): index of the servo
@@ -100,19 +115,20 @@ class ServoSet:
         address = 0x06 + 4 * index
         data = self._i2c.readfrom_mem(self._address, address, 4)
         duty = ustruct.unpack('<HH', data)[1]
-        angle = self._duty_to_angle(duty)
+        servo_angle = self._duty_to_servo_angle(duty)
+        angle = self._servo_infos[index].get_angle(servo_angle)
         return angle
 
     def move_to_angle(self, index: int, angle: float, time: float | None = None, num_steps: int | None = None) -> None:
-        """Move the specified servo to the given angle in the given time (seconds)
+        """Move the specified servo to the given logical angle in the given time (seconds)
 
         Args:
             index (int) servo index
-            angle (float) angle to move to in degrees
+            angle (float) logical angle to move to in degrees
             time (float): time (in seconds) to move between angles
             num_steps (int): number of steps to take in the movement
         """ 
-        # Loop over all requested angle values
+        # Current servo
         servo_info = self._servo_infos[index]
 
         # Check to make sure the new_angle is within the limits
@@ -120,7 +136,8 @@ class ServoSet:
             raise ValueError('new_angle is not within the range of the servo')
             
         # Retrieve current angle
-        current_angle = self.read(index)
+        current_servo_angle = self.read(index)
+        current_angle = servo_info.get_angle(current_servo_angle)
         
         if num_steps is None:
             num_steps = abs(int(angle - current_angle)) # 1 degree per step 
@@ -134,14 +151,11 @@ class ServoSet:
             self.write(index, angle)
             sleep(time_inc)
 
-
-    def move_to_angles(self, servo_angles: list[float], time: float | None = None, num_steps: int = 100) -> None:
-        """Move the specified servo to the given angle in the given time (seconds)
+    def move_to_angles(self, servo_angles: tuple[int, float], time: float | None = None, num_steps: int = 100) -> None:
+        """Move the specified servo to the given logical angles in the given time (seconds)
 
         Args:
-            servo_angles list of tuples with index, angle values
-            index (int) servo index
-            angle (float) angle to move to in degrees
+            servo_angles: list of tuples (index, logical angle) for each servo
             time (float): time (in seconds) to move between angles
             num_steps (int): number of steps to take in the movement
         """
@@ -180,39 +194,38 @@ class ServoSet:
         
         # Loop over all time points
         for n in range(numsteps + 1):
-            tnorm: float = n / numsteps
-            thetas: list[float] = gesture.get_thetas(tnorm)
+            t_norm: float = n / numsteps
+            angles: list[float] = gesture.get_angles(t_norm)
 
             # Loop over all servos
-            tstart_us: float = ticks_us()
+            t_start_us: float = ticks_us()
             for i in range(len(indices)):
                 index: int = indices[i]
-                angle: float = self._servo_infos[index].angle_from_theta(thetas[i])
-                self.write(index, angle)
+                self.write(index, angles[i])
 
-            tend_us: float = ticks_us()
-            dt_elapsed: float = 1.0e-06*(tend_us - tstart_us)
+            t_end_us: float = ticks_us()
+            dt_elapsed: float = 1.0e-06*(t_end_us - t_start_us)
             sleep(max(0.0, dt - dt_elapsed))
             
-    def _angle_to_duty(self, angle_deg: float) -> int:
-        """Convert the angle to a duty cycle
+    def _angle_to_duty(self, servo_angle_deg: float) -> int:
+        """Convert the servo angle to a duty cycle
 
         Args:
-            angle_deg (float): angle in deg to convert to a duty cycle
+            servo_angle_deg (float): servo angle in deg to convert to a duty cycle
 
         Returns:
             int: duty cycle [0, 4095]
         """
-        return int(self._offset + self._slope * angle_deg)
+        return int(self._offset + self._slope * servo_angle_deg)
 
-    def _duty_to_angle(self, duty: int) -> float:
-        """Convert the duty cycle to an angle
+    def _duty_to_servo_angle(self, duty: int) -> float:
+        """Convert the duty cycle to an servo angle
 
         Args:
             duty (int): duty cycle [0, 4095] to convert to an angle
 
         Returns:
-            float: angle in deg
+            float: servo angle in deg
         """
         return float(duty - self._offset) / self._slope
     
@@ -228,7 +241,12 @@ if __name__ == "__main__":
     print(f'Found {len(i2c.scan())} i2c devices.')
     
     # Create servo info objects
-    servo_infos = [ServoInfo(0, 0, 180), ServoInfo(1, 0, 180)]
+    servo_infos =[
+        ServoInfo(index=0, servo_angle_0 = 107, sign = 1),
+        ServoInfo(index=1, servo_angle_0 = 20, sign = 1),
+        ServoInfo(index=2, servo_angle_0 = 125, sign = 1),
+    ]
+    # servo_infos = [ServoInfo(0, 0, 180), ServoInfo(1, 0, 180)]
     for servo_info in servo_infos:
         print(servo_info)
 
@@ -256,4 +274,15 @@ if __name__ == "__main__":
     servo_set.move_to_angles([(0, 40), (1, 80)], time=t)
     servo_set.move_to_angles([(0, 170), (1, 120)], time=t)
     servo_set.move_to_angles([(0, 40), (1, 80)], time=1.0)
-
+    
+    # Gesture
+    print('Executing Gesture')
+    gesture = Gesture(
+        [0, 0.25, 0.5, 0.75, 1.0],
+        [0, 1, 2], 
+        [
+            [0.0, 40.0, 90.0, 40.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0]
+        ])
+    servo_set.execute_gesture(gesture, 2, 10)
