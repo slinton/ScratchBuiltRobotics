@@ -2,8 +2,6 @@
 # ServoInfo
 #
 # V2025_02_17_01
-# TODO: maybe add in named values? e.g., 'home', 'flexed', 'extended', etc.
-#
 class ServoInfo:
     """Encapsulation of servo information.
     Note that angle represents the logical angle as determined by the application, wherease servo_angle
@@ -80,7 +78,7 @@ class ServoInfo:
         return self._sign * (servo_angle - self._servo_angle_0)
     
     def __str__(self) -> str:
-        return f'Servo Info {self._name} at index {self._index}. Angle: {self._angle} Range: {self._angle_start}-{self._angle_end}'
+        return f'Servo Info {self._name} at index {self._index}. Angle: {self._angle} Range: {self._angle_start}-{self._angle_end} 0 angle = {self._servo_angle_0}'
     
    
 if __name__ == "__main__":

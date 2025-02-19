@@ -1,17 +1,31 @@
 #
 # Gesture
 #
-# V2025_02_17_02
+# V 2025_02_18_01
 #
 
 class Gesture:
     """Encapsulates a sequence of angles over (normalized) time for a set of servos.
     The angles are the logical values for the servos in degrees
     """
-    def __init__(self, times: list[float], indices: list[int], angles: list[list[float]], name: str = '') -> None:
-        self._times: list[float] = times # normalized time points, [0, 1]
-        self._indices: list[int] = indices # indices of servos
+    def __init__(self, 
+                 angles: list[list[float]], 
+                 times: list[float] | None = None, 
+                 indices: list[int] | None = None, 
+                 name: str = '') -> None:
         self._angles: list[list[float]] = angles # angles for each servo at each time point, degrees
+        
+        if times is None:
+            num_times: int = len(angles[0])
+            self._times: list[float] = [i / (num_times - 1) for i in range(num_times)]
+        else:
+            self._times: list[float] = times # normalized time points, [0, 1]
+
+        if indices is None:
+            self._indices: list[int] = [i for i in range(len(angles))]
+        else:   
+            self._indices: list[int] = indices # indices of servos
+        
         self._name: str = name
 
     @property
@@ -97,16 +111,13 @@ class Gesture:
     
 if __name__ == '__main__':
     # Test code
-    from time import sleep
-    
     gesture = Gesture(
-        [0, 0.25, 0.5, 0.75, 1.0],
-        [0, 1, 2], 
-        [
+        angles=[
             [0.0, 40.0, 90.0, 40.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 0.0]
-        ], 'Generic')
+        ], 
+        name='Generic')
     
     print(gesture)
     gesture.check()
@@ -124,3 +135,5 @@ if __name__ == '__main__':
         for j in range(len(gesture.indices)):
             print(f' {gesture.get_angles(t)[j]:3.0f}', end='\t')
         print()
+
+
