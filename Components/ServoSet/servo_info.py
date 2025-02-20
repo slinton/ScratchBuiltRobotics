@@ -1,7 +1,9 @@
 #
 # ServoInfo
 #
-# V2025_02_17_01
+# V 2025_02_19_01
+# TODO: perhaps add a "home" value
+#
 class ServoInfo:
     """Encapsulation of servo information.
     Note that angle represents the logical angle as determined by the application, wherease servo_angle

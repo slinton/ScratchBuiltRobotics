@@ -1,13 +1,14 @@
 #
 # ServoSet
 #
-# V2025_02_17_02
+# V2025_02_19_02
 #
 # TODO: Servo angles versus logical angles
 #
 import ustruct
 from machine import I2C
 from time import sleep, sleep_us, ticks_us
+import uasyncio as asyncio
 from servo_info import ServoInfo
 from gesture import Gesture
 
@@ -213,7 +214,36 @@ class ServoSet:
                 t_end_us: float = ticks_us()
                 dt_elapsed: float = 1.0e-06*(t_end_us - t_start_us)
                 sleep(max(0.0, dt - dt_elapsed))
-            
+
+    async def async_execute_gesture(self, gesture: Gesture, time: float, numsteps: int = 100, repeat: int = 1) -> None:
+        """Execute the gesture over the given time, breaking it into numsteps
+
+        Args:
+            gesture (Gesture): prescribed motion of the servos over time
+            time (float): amount of time to execute the gesture in seconds
+            numsteps (int, optional): Number of steps to execute, including start. Defaults to 100.
+        """
+        dt: float = time / numsteps
+        indices: list[int] = gesture.indices
+        
+        for _ in range(repeat):
+        
+            # Loop over all time points
+            for n in range(numsteps + 1):
+                t_norm: float = n / numsteps
+                angles: list[float] = gesture.get_angles(t_norm)
+
+                # Loop over all servos
+                t_start_us: float = ticks_us()
+                for i in range(len(indices)):
+                    index: int = indices[i]
+                    self.write(index, angles[i])
+
+                t_end_us: float = ticks_us()
+                dt_elapsed: float = 1.0e-06*(t_end_us - t_start_us)
+                dt_wait: int = int(1000.0 * max(0.0, dt - dt_elapsed))
+                await asyncio.sleep_ms(dt_wait)
+    
     def _angle_to_duty(self, servo_angle_deg: float) -> int:
         """Convert the servo angle to a duty cycle
 
@@ -287,24 +317,24 @@ if __name__ == "__main__":
     
     # Gesture
     #print('Executing Gesture...', end='')
-    lower_leg_gesture: Gesture = Gesture(
-        [
-            [0.0, 40.0, 90.0, 40.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0]
-        ])
-    upper_leg_gesture: Gesture = Gesture(
-        [
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 40.0, 90.0, 40.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0]
-        ])
-    shoulder_gesture: Gesture = Gesture(
-        [
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, -40.0, 0.0, 40.0, 0.0]
-        ])
+    # lower_leg_gesture: Gesture = Gesture(
+    #     [
+    #         [0.0, 40.0, 90.0, 40.0, 0.0],
+    #         [0.0, 0.0, 0.0, 0.0, 0.0],
+    #         [0.0, 0.0, 0.0, 0.0, 0.0]
+    #     ])
+    # upper_leg_gesture: Gesture = Gesture(
+    #     [
+    #         [0.0, 0.0, 0.0, 0.0, 0.0],
+    #         [0.0, 40.0, 90.0, 40.0, 0.0],
+    #         [0.0, 0.0, 0.0, 0.0, 0.0]
+    #     ])
+    # shoulder_gesture: Gesture = Gesture(
+    #     [
+    #         [0.0, 0.0, 0.0, 0.0, 0.0],
+    #         [0.0, 0.0, 0.0, 0.0, 0.0],
+    #         [0.0, -40.0, 0.0, 40.0, 0.0]
+    #     ])
     
 #     servo_set.execute_gesture(lower_leg_gesture, 2, 100)
 #     servo_set.execute_gesture(upper_leg_gesture, 2, 100)
@@ -323,10 +353,16 @@ if __name__ == "__main__":
 #             ]
 #         )
     
-    print('Moving to forward leg position...', end='')
-    servo_set.move_to_angles([(0, 30), (1, 30), (2, -45)], time=1.0)
+    # print('Moving to forward leg position...', end='')
+    # servo_set.move_to_angles([(0, 30), (1, 30), (2, -45)], time=1.0)
+    # print('done.')
+    print('Moving to home position...', end='')
+    servo_set.write(0, 30)
+    servo_set.write(1, 30)
+    servo_set.write(2, -45)
     print('done.')
     sleep(1)
+
     print('Starting walk gesture...', end='')
     walk_gesture: Gesture = Gesture(
             [
@@ -335,12 +371,8 @@ if __name__ == "__main__":
                 [-45, -45, 00, 45, 45,  00, -45, -45]
             ]
     )
-    servo_set.execute_gesture(walk_gesture, time=1.0, numsteps=200, repeat=5)
+    asyncio.run(servo_set.async_execute_gesture(walk_gesture, time=2.0, numsteps=200, repeat=5))
     print('done.')
 
-#     gesture: Gesture = lower_leg_gesture + upper_leg_gesture + shoulder_gesture
-#     servo_set.execute_gesture(gesture, 2, 100)
-    
-    print('done.')
 
 
