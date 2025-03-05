@@ -10,7 +10,7 @@ class DistanceSensor:
     """Class to get distance to features in front """
     
     def __init__(self, trigger=6, echo=2)-> None:
-        """_summary_
+        """Constructor
 
         Args:
             trigger (int): pin number for trigger

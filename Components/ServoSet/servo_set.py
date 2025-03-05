@@ -15,7 +15,6 @@ from gesture import Gesture
 class ServoSet:
     """Uses the PCA9685 to control a set of servos.
     """
-
     def __init__(self, 
                  i2c: I2C, 
                  servo_infos: list[ServoInfo],

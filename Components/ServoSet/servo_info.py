@@ -10,6 +10,7 @@ class ServoInfo:
     represents the physical angle of the servo. servo_angle_0 is the angle of the servo when the logical
     angle is 0.0.
     So servo_angle = servo_angle_0 + sign * angle
+    angle = sign * (servo_angle - servo_angle_0)
     The logical angle is constrained between angle_start and angle_end.
     """
     def __init__(self, 
