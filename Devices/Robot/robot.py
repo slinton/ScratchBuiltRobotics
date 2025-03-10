@@ -5,6 +5,8 @@
 
 # Version 25_03_09_01
 #
+# Consider: change JoystickController output to -100 to 100 for speed
+#
 from ble_client import BLEClient
 from machine import Pin
 import uasyncio as asyncio
@@ -18,11 +20,14 @@ class Robot:
                  left_pins = (10, 11),
                  right_pins = (12, 13),
                  led_pin: int = None,
-                 buzzer_pin:int = None,
-                 claw: Claw = None)-> None:
+                 buzzer_pin: int = None,
+                 claw: Claw | None = None)-> None:
+        
+        # Autonomous or remote control mode
+        self.autonomous: bool = False
         
         # Create Bluetooth client
-        self.ble_client = BLEClient(
+        self.ble_client: BLEClient = BLEClient(
             server_name='JoystickController',
             receive_message_func=self.receive_message,
             on_connected_func=self.on_connected,
@@ -30,15 +35,15 @@ class Robot:
             receive_interval_ms=50)
         
         # Create DriveTrain (two motors)
-        self.drive_train = DriveTrain(left_pins, right_pins)
+        self.drive_train: DriveTrain = DriveTrain(left_pins, right_pins)
         
         # Create additional optional devices
-        self.claw = claw
-        self.led = None if led_pin is None else Pin(led_pin, Pin.OUT)
-        self.buzzer = None if buzzer_pin is None else Buzzer(pin=buzzer_pin)
+        self.claw: Claw | None = claw
+        self.led: Pin | None = None if led_pin is None else Pin(led_pin, Pin.OUT)
+        self.buzzer: Buzzer | None = None if buzzer_pin is None else Buzzer(pin=buzzer_pin)
         
         # RC Car state
-        self.running = False
+        self.running: bool = False
         
     def receive_message(self, message: str)-> None:
         """Function to run when a message is received from the BLE server.
@@ -46,17 +51,47 @@ class Robot:
         Args:
             message (str): message from the JoystickController
         """
-        # TODO: clean this up
-        #print(f'Message: {message}')
-        values = message.split(',')
-        vals = (int(values[0], 16), int(values[1], 16), int(values[2], 16), int(values[3], 16), int(values[4]) % 2, int(values[4]) //2)
-        #print(vals)
+
+        # Parse the message
+        vals: tuple[int, int, int, int, int, int] = self.get_values(message)
+
+        # Toggle autonomous mode
+        if vals[4] == 1 and vals[5] == 1:
+            self.autonomous = not self.autonomous
+
+        if self.autonomous:
+            print('Autonomous mode')
+            # Start autonomous mode
+            self.run_autonomous()
+            self.autonomous = False
+            exit()
+            return
+
+        # Calculate the speed of the left and right motors
         left_speed = 100 * (vals[0] - 13447) / 13447
         right_speed = 100 * (vals[2] - 13447) / 13447
         self.drive_train.move(left_speed, right_speed)
         
         if self.claw is not None:
             self.claw.receive_message(message)
+
+    def get_values(self, message: str)-> tuple:
+        """Get the values from the message.
+
+        Args:
+            message (str): message from the JoystickController
+
+        Returns:
+            tuple: values from the message
+        """
+        values = message.split(',')
+        vals = (int(values[0], 16), 
+                int(values[1], 16), 
+                int(values[2], 16), 
+                int(values[3], 16), 
+                int(values[4]) % 2, 
+                int(values[4]) //2)
+        return vals
         
     def on_connected(self):
         """Function to run when the BLE connection is established.
@@ -76,6 +111,17 @@ class Robot:
         if self.buzzer != None:
             self.buzzer.end_sound()
 
+    def run_autonomous(self)-> None:
+        """Method to run the robot in autonomous mode.
+        """
+        # Read and run run_code.py if it exists
+        try:
+            with open('run_code.py', 'r') as f:
+                code = f.read()
+                exec(code, {'robot': self})  
+        except OSError:
+            print('No run_code.py file found!')
+            return
 
     def move(self, left_speed: int, right_speed: int, time_sec: float)-> None:
         """Arbitrary motion, controlling the speed of each motor independently.
