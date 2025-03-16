@@ -1,14 +1,12 @@
 #
 # Screen
 #
-# Version 24_07_31_00
+# Version 25_03_15
 #
 from ST7735 import TFT
 from sysfont import sysfont
-from machine import SPI,Pin
+from machine import SPI, Pin
 
-# TODO:
-# Create Screen base class to quickly switch between screen types
 # Default pin values:
 #
 # Pico Pin          SPI / Screen Label  
@@ -16,34 +14,31 @@ from machine import SPI,Pin
 # 7                 RES
 # 8                 CS
 # 18 (SPI0 SCK)     SCK
-# 19 (SPI1 TX       SDA
+# 19 (SPI1 TX)      SDA
+# 3.3V              LEDA
 
-class Screen:
+class Screen(TFT):
     def __init__(self, spi=None, rs=6, res=7, cs=8)-> None:
         if spi == None:
             spi = SPI(0, baudrate=20_000_000, polarity=0, phase=0,
               sck=Pin(18), mosi=Pin(19), miso=None)
-        self.screen = TFT(spi, rs, res, cs)
-        self.screen.initr()
-        self.screen.rgb(True)
-        self.screen.rotation(3)
-        self.screen.fill(TFT.BLACK)
-        self.dimensions = (128, 160)
+        super().__init__(spi, rs, res, cs);
+        self.initr()
+        self.rgb(True)
+        self.rotation(3)
+        self.fill(TFT.BLACK)
         
-    def size(self) :
-        return self.screen.size()
-    
-    def fill(self, color: TFTCOLOR=TFT.BLACK):
-        self.screen.fill(TFT.BLACK)
-        
-    def display(self, message: str, position=(0, 0), color: TFTCOLOR=TFT.WHITE, fontsize: int=1)-> None:
-        self.screen.text(position, message, color, sysfont, fontsize)
+    def text(self, coords: tuple[int, int], message: str, color: TFTColor = TFT.WHITE, size: int = 1, nowrap: bool = False) -> None:
+        super().text(coords, message, color, sysfont, size, nowrap)
         
         
 if __name__ == '__main__':
+    print('start')
     screen = Screen()
-    y = screen.size()[1] / 2
+    width, height = screen.size()
+    y = width / 2
     screen.fill()
-    screen.display('Hello, World!', position = (30, y))
+    screen.text((0, y), "Want pi?", TFT.GREEN)
+    screen.line((0, 0), (width, height), TFT.RED)
     
-        
+
