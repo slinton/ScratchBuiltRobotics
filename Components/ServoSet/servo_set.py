@@ -6,7 +6,7 @@
 # TODO: Servo angles versus logical angles
 #
 import ustruct
-from machine import I2C
+from machine import I2C, Pin
 from time import sleep, sleep_us, ticks_us
 import uasyncio as asyncio
 from servo_info import ServoInfo
@@ -273,7 +273,8 @@ if __name__ == "__main__":
     from time import sleep
 
     # Create I2C object
-    i2c = I2C(0, sda=0, scl=1)
+#     i2c = I2C(0, sda=0, scl=1)
+    i2c = I2C(id=1, scl=Pin(15), sda=Pin(14))
     print(f'Found {len(i2c.scan())} i2c devices.')
     
     # Create servo info objects
@@ -372,6 +373,7 @@ if __name__ == "__main__":
     )
     asyncio.run(servo_set.async_execute_gesture(walk_gesture, time=2.0, numsteps=200, repeat=5))
     print('done.')
+
 
 
 
