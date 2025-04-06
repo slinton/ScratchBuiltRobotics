@@ -12,10 +12,12 @@ def test_all_i2cs():
             i2c = I2C(id=id, sda=Pin(sda_pin), scl=Pin(scl_pin))
             devices = i2c.scan()
             if len(devices) > 0:
-                print(f'Found {len(devices)} device on I2C {id}, sda = {sda_pin}, scl = {scl_pin}:')
+                print(f'Found {len(devices)} devices on I2C {id}, sda = {sda_pin}, scl = {scl_pin}:')
                 for device in devices:  
                     print(f'\tDecimal address: {device}  Hex address: {hex(device)}')
                 print()
+            else:
+                print(f'Found {len(devices)} devices on I2C {id}, sda = {sda_pin}, scl = {scl_pin}:')
         except:
             print(f'Incorrect I2C pins for I2c {id}: sda = {sda_pin}, scl = {scl_pin}')
         
