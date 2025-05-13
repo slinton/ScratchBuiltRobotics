@@ -64,6 +64,9 @@ class BLEClient:
             except Exception as e:
                 print(f'Exception: {e}')
                 self.connection = None
+                print('DISCONNECTED')
+                if self.on_disconnected_func:
+                    self.on_disconnected_func()
         
     def is_connected(self)-> bool:
         return not self.connection == None and self.connection.is_connected() 
