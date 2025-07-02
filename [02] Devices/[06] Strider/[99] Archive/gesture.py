@@ -1,12 +1,7 @@
 #
 # Gesture
 #
-# Version: 1.00
-# Date: 2025-06-10
-# Author: Sam Linton
-# Description: Represents a coordinated motion of multiple servos over time.
-#
-# TODO: Check out the addition of gestures
+# V 2025_02_18_01
 #
 
 class Gesture:
@@ -18,14 +13,6 @@ class Gesture:
                  times: list[float] | None = None, 
                  indices: list[int] | None = None, 
                  name: str = '') -> None:
-        """constructor  
-
-        Args:
-            angles (list[list[float]]): list of angles for each servo at each time point, degrees
-            times (list[float] | None, optional): list of normalized times at each time point. Defaults to None.
-            indices (list[int] | None, optional): list of the indices of the servos. Defaults to None.
-            name (str, optional): name of the gesture. Defaults to ''.
-        """
         self._angles: list[list[float]] = angles # angles for each servo at each time point, degrees
         
         if times is None:
@@ -122,7 +109,6 @@ class Gesture:
         
         return Gesture(new_times, self._indices, new_angles, f'{self._name} + {other._name}') 
     
-
 if __name__ == '__main__':
     # Test code
     gesture = Gesture(

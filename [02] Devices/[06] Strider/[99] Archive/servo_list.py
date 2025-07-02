@@ -1,5 +1,5 @@
 #
-# ServoSet
+# ServoList
 #
 # Version: 1.00
 # Date: 2025-06-10
@@ -18,7 +18,7 @@ import uasyncio as asyncio # type: ignore
 from servo_info import ServoInfo
 from gesture import Gesture
 
-class ServoSet:
+class ServoList:
     """Uses the PCA9685 to control a set of servos.
     In this class, "angle" refers to the logical angle of the servo, which is a value that is
     determined by the application. The physical angle of the servo is referred to as "servo_angle".
@@ -49,8 +49,10 @@ class ServoSet:
         # Slope and offset for converting servo angles (degrees) to duty cycles [0, 4095]
         self._slope: float = (max_duty - min_duty) / max_angle_deg
         self._offset: float = min_duty
-
+        
+        print('resetting...', end='')
         self.reset()
+        print('done')
         self.set_freq(freq)
         
         # Set all servo angles
@@ -108,7 +110,8 @@ class ServoSet:
         servo_angle: float = servo_info.get_servo_angle(angle)
         #print(f'write to angle {angle} servo angle {servo_angle}')
         duty = self._servo_angle_to_duty(servo_angle)
-        address = 0x06 + 4 * index
+        #address = 0x06 + 4 * index
+        address = 0x06 + 4 * servo_info.pin
         
         # Create data to write to I2C
         data = ustruct.pack('<HH', 0, duty) # type: ignore
@@ -124,7 +127,9 @@ class ServoSet:
             float: angle of the servo
         """
         # Read the duty cycle from the servo
-        address = 0x06 + 4 * index
+        servo_info: ServoInfo = self._servo_infos[index]
+        address = 0x06 + 4 * servo_info.pin
+        #address = 0x06 + 4 * index
         data = self._i2c.readfrom_mem(self._address, address, 4) 
         duty: int = ustruct.unpack('<HH', data)[1]
         servo_angle = self._duty_to_servo_angle(duty)
@@ -274,8 +279,8 @@ class ServoSet:
         return float(duty - self._offset) / self._slope
     
     def __str__(self) -> str:
-        """String representation of the ServoSet object."""
-        servo_info_strs = f'ServoSet: \n   {'\n   '.join(str(servo_info) for servo_info in self._servo_infos)}'
+        """String representation of the ServoList object."""
+        servo_info_strs = f'ServoList: \n   {'\n   '.join(str(servo_info) for servo_info in self._servo_infos)}'
         return servo_info_strs
     
 
@@ -286,16 +291,17 @@ if __name__ == "__main__":
     
     # Create servo info objects
     servo_infos =[
-        ServoInfo(index=0, servo_angle_0 = 107, sign = -1, name='lower-leg', angle_start=0, angle_end=90),
-        ServoInfo(index=1, servo_angle_0 = 20, sign = 1, name='upper-leg', angle_start=0, angle_end=90),
-        ServoInfo(index=2, servo_angle_0 = 125, sign = -1, name='shoulder', angle_start=-50, angle_end=50),
+        ServoInfo(pin=15, index=0, servo_angle_0 = 107, sign = -1, name='lower-leg', angle_start=0, angle_end=90),
+        ServoInfo(pin=14, index=1, servo_angle_0 = 20, sign = 1, name='upper-leg', angle_start=0, angle_end=90),
+        ServoInfo(pin=13, index=2, servo_angle_0 = 125, sign = -1, name='shoulder', angle_start=-50, angle_end=50),
     ]
     for servo_info in servo_infos:
         print(servo_info)
 
-    # Create ServoSet object
-    servo_set = ServoSet(i2c, servo_infos)
-    
+    # Create ServoList object
+
+    servo_list = ServoList(i2c, servo_infos)
+    '''
 
     print('Moving to home position...', end='')
     servo_set.write(0, 30)
@@ -315,6 +321,6 @@ if __name__ == "__main__":
     asyncio.run(servo_set.async_execute_gesture(walk_gesture, time=2.0, numsteps=200, repeat=5))
     print('done.')
 
-
+'''
 
 

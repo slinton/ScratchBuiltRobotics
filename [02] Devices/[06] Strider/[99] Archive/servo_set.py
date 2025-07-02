@@ -11,10 +11,10 @@
 # - perhaps make multiple move method use entire array, not just specified indices.
 # - can't execute_gesture be derived from async_execute_gesture?
 #
-import ustruct # type: ignore
-from machine import I2C, Pin # type: ignore
-from time import sleep, sleep_us, ticks_us # type: ignore
-import uasyncio as asyncio # type: ignore
+import ustruct
+from machine import I2C, Pin
+from time import sleep, sleep_us, ticks_us
+import uasyncio as asyncio
 from servo_info import ServoInfo
 from gesture import Gesture
 
@@ -24,7 +24,7 @@ class ServoSet:
     determined by the application. The physical angle of the servo is referred to as "servo_angle".
     """
     def __init__(self, 
-                 i2c: I2C, # type: ignore
+                 i2c: I2C, 
                  servo_infos: list[ServoInfo],
                  address: int = 0x40, 
                  freq: float = 50, 
@@ -42,7 +42,7 @@ class ServoSet:
         self._address: int = address
 
         # Compute min and max duty cycles (0-4095)
-        t_period_us: int = int(1_000_000 / freq) # period in us
+        t_period_us: int = 1_000_000 / freq # period in us
         min_duty: float = self._us2duty(min_us, t_period_us)
         max_duty: float = self._us2duty(max_us, t_period_us)
 
@@ -80,7 +80,7 @@ class ServoSet:
             address (int): I2C address
             value (int): value
         """
-        self._i2c.writeto_mem(self._address, address, bytearray([value])) # type: ignore
+        self._i2c.writeto_mem(self._address, address, bytearray([value]))
 
     def _read(self, address: int) -> int:
         """Read value from the I2C address
@@ -91,7 +91,7 @@ class ServoSet:
         Returns:
             int: value read from the address
         """
-        return self._i2c.readfrom_mem(self._address, address, 1)[0] # type: ignore
+        return self._i2c.readfrom_mem(self._address, address, 1)[0]
         
     def write(self, index: int, angle: float) -> None:
         """Move the servo with the given index to the specified logical angle
@@ -111,8 +111,8 @@ class ServoSet:
         address = 0x06 + 4 * index
         
         # Create data to write to I2C
-        data = ustruct.pack('<HH', 0, duty) # type: ignore
-        self._i2c.writeto_mem(self._address, address,  data) # type: ignore
+        data = ustruct.pack('<HH', 0, duty)
+        self._i2c.writeto_mem(self._address, address,  data)
 
     def read(self, index: int) -> float:
         """Read the logical angle from the servo with the given index
@@ -125,8 +125,8 @@ class ServoSet:
         """
         # Read the duty cycle from the servo
         address = 0x06 + 4 * index
-        data = self._i2c.readfrom_mem(self._address, address, 4) 
-        duty: int = ustruct.unpack('<HH', data)[1]
+        data = self._i2c.readfrom_mem(self._address, address, 4)
+        duty = ustruct.unpack('<HH', data)[1]
         servo_angle = self._duty_to_servo_angle(duty)
         angle = self._servo_infos[index].get_angle(servo_angle)
         return angle
