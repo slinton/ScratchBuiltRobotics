@@ -1,5 +1,5 @@
 #
-# ServoMotorMock
+# MockServoMotor
 #
 # Version: 1.00
 # Date: 2025-07-01
@@ -9,11 +9,13 @@
 #
 from typing import override
 from servo_motor import ServoMotor
-class ServoMotorMock(ServoMotor):
+
+
+class MockServoMotor(ServoMotor):
     """Mock implementation of ServoMotor for testing purposes."""
     
     def __init__(self, 
-                 name: str = 'ServoMotorMock',
+                 name: str = 'MockServoMotor',
                  pin: int = 0,
                  raw_angle_0: float = 0.0,
                  angle_start: float = 0.0,
@@ -44,7 +46,7 @@ class ServoMotorMock(ServoMotor):
 
 if __name__ == '__main__':
     # Example usage
-    servo = ServoMotorMock(
+    servo = MockServoMotor(
         name='TestServo', 
         pin=1, 
         raw_angle_0=90.0, 

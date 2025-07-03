@@ -101,6 +101,13 @@ class ServoMotor:
                 t += time_inc
             print(f'Angle {new_angle} at time {t:.2f} seconds')
 
+    def home(self, time: float = 0.0) -> None:
+        """Move to the home angle."""
+        self.move_to_angle(self._angle_home, time=time)
+
+    def off(self) -> None:
+        pass
+
     def _sleep(self, seconds: float) -> None:
         pass
     
