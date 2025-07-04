@@ -11,6 +11,8 @@
 # raw = sign * angle + raw_angle_0
 # angle = sign * (raw - raw_angle_0)
 #
+# TODO: Is read_angle even needed?
+#
 class ServoMotor:
     def __init__(self, 
                  name: str ='',
@@ -53,17 +55,6 @@ class ServoMotor:
             raise ValueError("Angle not initialized.")
         return self._angle
     
-    def read_angle(self) -> float:
-        """Read the logical angle from the servo."""
-        raw_angle = self._read_raw_angle()
-        self._angle = self._angle_from_raw_angle(raw_angle)
-        self._initialized = True
-        return self._angle
-    
-    def _read_raw_angle(self) -> float:
-        """Read the servo angle from the hardware."""
-        raise NotImplementedError("This method should be overridden in subclasses.")
-    
     def write_angle(self, angle: float) -> None:
         """Write logical angle to the servo."""
         raw_angle = self._raw_angle_from_angle(angle)
@@ -79,8 +70,8 @@ class ServoMotor:
     
     # TODO: Add an async version of this method
     def move_to_angle(self, angle: float, time: float = 0.0, angle_inc: float = 1.0) -> None:
-        current_angle = self.read_angle()
-        num_steps: int = int(abs((angle - current_angle) / angle_inc)) # Counts now 
+        start_angle = self._angle
+        num_steps: int = int(abs((angle - start_angle) / angle_inc)) # Counts now 
         
         # Immediate move if no time
         if time <= 0.0 or num_steps <= 1:
@@ -88,12 +79,12 @@ class ServoMotor:
             return
         
         # Move in steps
-        angle_inc = (angle - current_angle) / num_steps
+        angle_inc = (angle - start_angle) / num_steps
         time_inc = time / (num_steps - 1)
         
         t = 0.0
         for n in range(num_steps):
-            new_angle: float = current_angle + (n + 1) * angle_inc
+            new_angle: float = start_angle + (n + 1) * angle_inc
             print(f'Moving to angle: {new_angle} (step {n}/{num_steps})')
             self.write_angle(new_angle)
             if n < num_steps -1: 

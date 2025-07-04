@@ -28,11 +28,6 @@ class PWMServoMotor(ServoMotor):
         super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home, min_us, max_us, freq)
         self._pwm: PWM  = PWM(Pin(pin))
         self._pwm.freq(freq) 
-
-    @override
-    def read_angle(self) -> float:
-        """No actual read. Just return the saved value."""
-        return self._angle
     
     @override
     def off(self) -> None:
@@ -64,7 +59,7 @@ if __name__ == '__main__':
     print(f'Moving to 170 degrees...', end='')
     servo.move_to_angle(170.0, time=1.0)
     print('Done.')
-    print(f'Moving to 0 degrees...', end='')
+    print(f'Moving to 10 degrees...', end='')
     servo.move_to_angle(10.0, time=1.0)
     print('Done.')
 

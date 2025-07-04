@@ -10,7 +10,6 @@
 from typing import override
 from servo_motor import ServoMotor
 
-
 class MockServoMotor(ServoMotor):
     """Mock implementation of ServoMotor for testing purposes."""
     
@@ -27,11 +26,6 @@ class MockServoMotor(ServoMotor):
                  ) -> None:
         super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home, min_us, max_us, freq)
         self._angle = angle_home  # Initialize to home position
-
-    @override
-    def _read_raw_angle(self) -> float:
-        print("[Mock] Reading raw angle")
-        return self._raw_angle_from_angle(self._angle)
 
     @override
     def _write_raw_angle(self, raw_angle: float) -> None:
@@ -65,10 +59,10 @@ if __name__ == '__main__':
     angle = -30.0
     print(f'write_angle: {angle}')
     servo.write_angle(angle)
-    print(f'Angle after write: {servo.read_angle()}')
+    print(f'Angle after write: {servo.angle}')
 
     print('\nTest move to angle:')
     new_angle = 30.0
     print(f'Moving to angle: {new_angle}')
     servo.move_to_angle(new_angle, time=6.0, angle_inc=10)
-    print(f'Angle after move: {servo.read_angle()}')
+    print(f'Angle after move: {servo.angle}')
