@@ -62,16 +62,16 @@ class ServoMotor:
             raise ValueError("Angle not initialized.")
         return self._angle
     
-    def write_angle(self, angle: float) -> None:
+    def set_angle(self, angle: float) -> None:
         """Write logical angle to the servo."""
         raw_angle = self._raw_angle_from_angle(angle)
         if not self.angle_in_range(angle):
             raise ValueError(f'Angle {angle} is out of range ({self._angle_start}, {self._angle_end})')
-        self._write_raw_angle(raw_angle)
+        self._set_raw_angle(raw_angle)
         self._angle = angle
         self._initialized = True
     
-    def _write_raw_angle(self, raw_angle: float) -> None:
+    def _set_raw_angle(self, raw_angle: float) -> None:
         """Write the servo angle to the hardware."""
         raise NotImplementedError("This method should be overridden in subclasses.")
     
@@ -82,7 +82,7 @@ class ServoMotor:
         
         # Immediate move if no time
         if time <= 0.0 or num_steps <= 1:
-            self.write_angle(angle)
+            self.set_angle(angle)
             return
         
         # Move in steps
@@ -93,7 +93,7 @@ class ServoMotor:
         for n in range(num_steps):
             new_angle: float = start_angle + (n + 1) * angle_inc
             print(f'Moving to angle: {new_angle} (step {n}/{num_steps})')
-            self.write_angle(new_angle)
+            self.set_angle(new_angle)
             if n < num_steps -1: 
                 self._sleep(time_inc)
                 t += time_inc
@@ -105,7 +105,7 @@ class ServoMotor:
         
         new_angle = self._angle + angle_inc
         if self.angle_in_range(new_angle):
-            self.write_angle(new_angle)
+            self.set_angle(new_angle)
 
     def home(self, time: float = 0.0, angle_inc: float = 1.0) -> None:
         """Move to the home angle."""
@@ -135,14 +135,14 @@ class ServoMotor:
         self._state = ServoMotor.STOPPED
 
     def off(self) -> None:
-        pass
-
-    def _sleep(self, seconds: float) -> None:
-        pass
-    
+        raise NotImplementedError("Implement in subclass to turn off the servo motor.")
+        
     def angle_in_range(self, angle: float) -> bool:
         """True if the logical angle is within the allowed range."""
         return  (self._angle_end - angle) * (angle - self._angle_start) >= 0.0
+    
+    def _sleep(self, seconds: float) -> None:
+        raise NotImplementedError("Implement in subclass to sleep for a given number of seconds.")
     
     def _raw_angle_from_angle(self, angle: float) -> float:
         """Get the servo angle from the logical angle"""

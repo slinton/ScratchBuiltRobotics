@@ -16,7 +16,7 @@ from servo_motor import ServoMotor
 class PWMServoMotor(ServoMotor):
     def __init__(self, 
                  name: str = '',
-                 pin: int = 0,
+                 pin: int = 16,
                  raw_angle_0: float = 0.0,
                  angle_start: float = 0.0,
                  angle_end: float = 180.0,
@@ -32,7 +32,7 @@ class PWMServoMotor(ServoMotor):
         self._pwm.duty_ns(0)
 
     # @override
-    def _write_raw_angle(self, raw_angle: float) -> None:
+    def _set_raw_angle(self, raw_angle: float) -> None:
         """Write the raw angle to the servo."""
         us = ServoMotor.MIN_US + (raw_angle / 180.0) * (ServoMotor.MAX_US - ServoMotor.MIN_US)
         self._pwm.duty_ns(int(us * 1000.0))
@@ -69,3 +69,4 @@ if __name__ == '__main__':
     print('Turning off servo...', end='')
     servo.off()
     print('Done.')
+    sleep(5)

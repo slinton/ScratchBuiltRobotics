@@ -35,18 +35,26 @@ class I2CServoMotor(ServoMotor):
         self._i2c: I2C = servo_controller.i2c
 
     # @override
-    def _write_raw_angle(self, raw_angle: float) -> None:
+    def _set_raw_angle(self, raw_angle: float) -> None:
         duty = self._raw_angle_to_duty(raw_angle)
         address = 0x06 + 4 * self._pin
         
         # Create data to write to I2C
-        data = ustruct.pack('<HH', 0, duty) # type: ignore
-        self._i2c.writeto_mem(I2CServoMotor.ADDRESS, address,  data) # type: ignore
+        data = ustruct.pack('<HH', 0, duty) 
+        self._i2c.writeto_mem(I2CServoMotor.ADDRESS, address,  data) 
 
     # @override
     def _sleep(self, seconds: float) -> None:
         """Sleep for a given number of seconds."""
-        sleep(seconds)  
+        sleep(seconds)
+        
+    # @override
+    def off(self) -> None:
+        address = 0x06 + 4 * self._pin
+        
+        # Create data to write to I2C
+        data = ustruct.pack('<HH', 0, 0) # type: ignore
+        self._i2c.writeto_mem(I2CServoMotor.ADDRESS, address,  data)
 
     # TODO: how does this compare to the PWM case?
     def _raw_angle_to_duty(self, raw_angle: float) -> int:
@@ -77,12 +85,12 @@ if __name__ == "__main__":
 
     try:
         print('Write angle to 10...', end='')
-        servo.write_angle(10)
+        servo.set_angle(10)
         print('done')
         sleep(1)
         
         print('Write angle to 170...', end='')
-        servo.write_angle(170)
+        servo.set_angle(170)
         print('done')
         sleep(1)
         
@@ -91,7 +99,10 @@ if __name__ == "__main__":
         print('done')
         sleep(1)
         
+        print('Turning off servo...', end='')
         servo.off()
+        print('Done.')
+        sleep(5)
         
     except Exception as e:
         print(f"Error: {e}")
