@@ -20,11 +20,8 @@ class MockServoMotor(ServoMotor):
                  angle_start: float = 0.0,
                  angle_end: float = 180.0,
                  angle_home: float = 90.0,
-                 min_us: float = 544.0,
-                 max_us: float = 2400.0,
-                 freq: int = 50
                  ) -> None:
-        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home, min_us, max_us, freq)
+        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home)
         self._angle = angle_home  # Initialize to home position
 
     @override

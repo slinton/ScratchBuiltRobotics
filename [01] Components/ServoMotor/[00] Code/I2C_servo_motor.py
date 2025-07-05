@@ -17,35 +17,29 @@ from servo_motor import ServoMotor
 
 
 class I2CServoMotor(ServoMotor):
+    ADDRESS: int = 0x40  # Default I2C address for PCA9685
+
     def __init__(self, 
                  pin: int,
                  i2c: I2C,
-                 address: int = 0x40,
                  name: str = '',
                  raw_angle_0: float = 0.0,
                  angle_start: float = 0.0,
                  angle_end: float = 180.0,
                  angle_home: float = 90.0,
-                 min_us: float = 544.0,
-                 max_us: float = 2400.0,
-                 freq: int = 50
                  ) -> None:
-        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home, min_us, max_us, freq)
+        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home)
 
         self._i2c: I2C = i2c
-        self._address: int = address
-
-
-
-    @override
-    def _read_raw_angle(self) -> float:
-        """Read the raw angle from the servo."""
-        raise NotImplementedError("I2CServoMotor does not implement _read_raw_angle")
 
     @override
     def _write_raw_angle(self, raw_angle: float) -> None:
-        """Write the raw angle to the servo."""
-        raise NotImplementedError("I2CServoMotor does not implement _write_raw_angle")
+        duty = self._servo_angle_to_duty(servo_angle)
+        address = 0x06 + 4 * self._pin
+        
+        # Create data to write to I2C
+        data = ustruct.pack('<HH', 0, duty) # type: ignore
+        self._i2c.writeto_mem(self._address, address,  data) # type: ignore
 
     @override
     def _sleep(self, seconds: float) -> None:

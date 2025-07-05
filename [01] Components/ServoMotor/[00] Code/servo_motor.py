@@ -11,9 +11,20 @@
 # raw = sign * angle + raw_angle_0
 # angle = sign * (raw - raw_angle_0)
 #
-# TODO: Is read_angle even needed?
+# TODO: Maybe have modes SPEED_CONTROL, ANGLE_CONTROL
 #
+
+import uasyncio as asyncio
+
 class ServoMotor:
+    STOPPED: str = 'stopped'
+    INCREASING: str = 'increasing'
+    DECREASING: str = 'decreasing'
+    ANGLE_INC: float = 2.0
+    MIN_US: float = 544.0 # Or 600.0
+    MAX_US: float = 2400.0
+    FREQ: int = 50 # PWM frequency in Hz
+
     def __init__(self, 
                  name: str ='',
                  pin: int = 0,
@@ -21,9 +32,6 @@ class ServoMotor:
                  angle_start: float = 0.0, # Logical starting angle
                  angle_end: float = 180.0, # Logical ending value
                  angle_home: float = 90.0, # Logical home angle
-                 min_us: float = 544.0, # Or 600.0
-                 max_us: float = 2400.0,
-                 freq: int = 50 # PWM frequency in Hz
                  ) -> None:
         self._name: str = f'Servo: {str(pin)}' if name == '' else name
         self._pin: int = pin 
@@ -37,9 +45,7 @@ class ServoMotor:
         self._angle_end: float = angle_end
         self._angle_home: float = angle_home
 
-        self._min_us: float = min_us
-        self._max_us: float = max_us
-        self._freq: int = freq
+        self._state = ServoMotor.STOPPED
 
     @property
     def name(self) -> str:
@@ -92,9 +98,40 @@ class ServoMotor:
                 t += time_inc
             print(f'Angle {new_angle} at time {t:.2f} seconds')
 
-    def home(self, time: float = 0.0) -> None:
+    def move_by(self, angle_inc: float) -> None:
+        if not self._initialized:
+            raise ValueError('Servo angle not initialized. Please set the angle first.')
+        
+        new_angle = self._angle + angle_inc
+        if self.angle_in_range(new_angle):
+            self.write_angle(new_angle)
+
+    def home(self, time: float = 0.0, angle_inc: float = 1.0) -> None:
         """Move to the home angle."""
-        self.move_to_angle(self._angle_home, time=time)
+        self.move_to_angle(self._angle_home, time=time, angle_inc=angle_inc)
+
+    def move_to_start(self, time: float = 0.0, angle_inc: float = 1.0) -> None:
+        """Move to the start angle."""
+        self.move_to_angle(self._angle_start, time=time, angle_inc=angle_inc)
+
+    def move_to_end(self, time: float = 0.0, angle_inc: float = 1.0) -> None:
+        """Move to the end angle."""
+        self.move_to_angle(self._angle_end, time=time, angle_inc=angle_inc)
+
+    def start_increasing(self) -> None:
+        if not self._state == ServoMotor.INCREASING:
+            print('start_increasing')
+        self._state = ServoMotor.INCREASING
+
+    def start_decreasing(self) -> None:
+        if not self._state == ServoMotor.DECREASING:
+            print('start_decreasing')
+        self._state = ServoMotor.DECREASING
+
+    def stop(self) -> None:
+        if not self._state == ServoMotor.STOPPED:
+            print('stop')
+        self._state = ServoMotor.STOPPED
 
     def off(self) -> None:
         pass
@@ -119,6 +156,25 @@ class ServoMotor:
             f'Angle Range: {self._angle_start}-{self._angle_end}\n' + \
             f'Home Angle: {self._angle_home}\n' + \
             f'Zero Raw Angle = {self._raw_angle_0}'
+    
+    # TODO: Do I need a special mode for this? Maybe a better name?
+    async def run_loop(self, angle_inc: float = ServoMotor.ANGLE_INC) -> None:
+        while True:
+            try:
+                while self._state == ServoMotor.INCREASING:
+                    self.move_by(self._sign * angle_inc)
+                    await asyncio.sleep_ms(10)
+
+                while self._state == ServoMotor.DECREASING:
+                    self.move_by(-self._sign * angle_inc)
+                    await asyncio.sleep_ms(10)
+
+                if self._state == ServoMotor.STOPPED:
+                    await asyncio.sleep_ms(10)
+                    
+            except Exception as e:
+                print(f'Exception: {e}')
+                self._state = ServoMotor.STOPPED
     
    
 if __name__ == "__main__":

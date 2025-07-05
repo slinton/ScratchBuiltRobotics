@@ -21,13 +21,10 @@ class PWMServoMotor(ServoMotor):
                  angle_start: float = 0.0,
                  angle_end: float = 180.0,
                  angle_home: float = 90.0,
-                 min_us: float = 544.0,
-                 max_us: float = 2400.0,
-                 freq: int = 50
                  ) -> None:
-        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home, min_us, max_us, freq)
+        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home)
         self._pwm: PWM  = PWM(Pin(pin))
-        self._pwm.freq(freq) 
+        self._pwm.freq(ServoMotor) 
     
     @override
     def off(self) -> None:
@@ -37,13 +34,14 @@ class PWMServoMotor(ServoMotor):
     @override
     def _write_raw_angle(self, raw_angle: float) -> None:
         """Write the raw angle to the servo."""
-        us = self._min_us + (raw_angle / 180.0) * (self._max_us - self._min_us)
+        us = ServoMotor.MIN_US + (raw_angle / 180.0) * (ServoMotor.MAX_US - ServoMotor.MIN_US)
         self._pwm.duty_ns(int(us * 1000.0))
 
     @override
     def _sleep(self, seconds: float) -> None:
         """Sleep for a given number of seconds."""
         sleep(seconds)  
+
 
 if __name__ == '__main__':
     # Create a PWMServoMotor instance
