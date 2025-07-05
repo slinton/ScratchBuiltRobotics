@@ -27,6 +27,10 @@ class ServoController:
         self.reset()
         self.set_freq(ServoController.FREQ)
 
+    @property
+    def i2c(self) -> I2C:
+        return self._i2c
+
     def reset(self) -> None:
         self._write(0x00, 0x00) # Mode1
 
@@ -43,7 +47,7 @@ class ServoController:
         self._i2c.writeto_mem(ServoController.ADDRESS, address, bytearray([value])) # type: ignore
 
     def _read(self, address: int) -> int:
-        return self._i2c.readfrom_mem(self._address, address, 1)[0] # type: ignore
+        return self._i2c.readfrom_mem(ServoController.ADDRESS, address, 1)[0] # type: ignore
     
    
 if __name__ == "__main__":

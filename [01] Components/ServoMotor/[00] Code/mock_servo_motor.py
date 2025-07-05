@@ -7,7 +7,7 @@
 # Description: Mock implementation of ServoMotor for testing purposes.
 #
 #
-from typing import override
+# from typing import override
 from servo_motor import ServoMotor
 
 class MockServoMotor(ServoMotor):
@@ -24,11 +24,11 @@ class MockServoMotor(ServoMotor):
         super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home)
         self._angle = angle_home  # Initialize to home position
 
-    @override
+    # @override
     def _write_raw_angle(self, raw_angle: float) -> None:
         print(f"[Mock] Writing raw angle: {raw_angle}")
 
-    @override
+    # @override
     def _sleep(self, seconds: float) -> None:
         import time
         print(f"[Mock] Sleeping for {seconds} seconds")

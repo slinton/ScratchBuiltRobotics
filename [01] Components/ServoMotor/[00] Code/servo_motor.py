@@ -20,11 +20,12 @@ class ServoMotor:
     STOPPED: str = 'stopped'
     INCREASING: str = 'increasing'
     DECREASING: str = 'decreasing'
+    MAX_ANGLE_DEG: float = 180.0
     ANGLE_INC: float = 2.0
     MIN_US: float = 544.0 # Or 600.0
     MAX_US: float = 2400.0
     FREQ: int = 50 # PWM frequency in Hz
-
+    
     def __init__(self, 
                  name: str ='',
                  pin: int = 0,
@@ -158,7 +159,7 @@ class ServoMotor:
             f'Zero Raw Angle = {self._raw_angle_0}'
     
     # TODO: Do I need a special mode for this? Maybe a better name?
-    async def run_loop(self, angle_inc: float = ServoMotor.ANGLE_INC) -> None:
+    async def run_loop(self, angle_inc: float = ANGLE_INC) -> None:
         while True:
             try:
                 while self._state == ServoMotor.INCREASING:
