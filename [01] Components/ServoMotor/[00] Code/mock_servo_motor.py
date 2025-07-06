@@ -25,7 +25,7 @@ class MockServoMotor(ServoMotor):
         self._angle = angle_home  # Initialize to home position
 
     # @override
-    def _write_raw_angle(self, raw_angle: float) -> None:
+    def _set_raw_angle(self, raw_angle: float) -> None:
         print(f"[Mock] Writing raw angle: {raw_angle}")
 
     # @override
@@ -54,8 +54,8 @@ if __name__ == '__main__':
 
     print('\nTest write and read angle:')
     angle = -30.0
-    print(f'write_angle: {angle}')
-    servo.write_angle(angle)
+    print(f'set_angle: {angle}')
+    servo.set_angle(angle)
     print(f'Angle after write: {servo.angle}')
 
     print('\nTest move to angle:')
