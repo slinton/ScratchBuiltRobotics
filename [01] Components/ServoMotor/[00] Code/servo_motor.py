@@ -93,31 +93,6 @@ class ServoMotor:
                 self._sleep(time_inc)
                 t += time_inc
             print(f'Angle {new_angle} at time {t:.2f} seconds')
-            
-    # TODO: Add an async version of this method
-    def move_to_angle_2(self, angle: float, time: float = 0.0, angle_inc: float = 1.0) -> None:
-        start_angle = self._angle
-        num_steps: int = int(abs((angle - start_angle) / angle_inc)) # Counts now 
-        
-        # Immediate move if no time
-        if time <= 0.0 or num_steps <= 1:
-            self.set_angle(angle)
-            return
-        
-        # Move in steps
-        angle_inc = (angle - start_angle) / num_steps
-        time_inc = time / (num_steps - 1)
-        
-        t = 0.0
-        for n in range(num_steps):
-            new_angle: float = start_angle + (n + 1) * angle_inc
-            print(f'Moving to angle: {new_angle} (step {n}/{num_steps})')
-            self.set_angle(new_angle)
-            if n < num_steps -1: 
-                self._sleep(time_inc)
-                t += time_inc
-            print(f'Angle {new_angle} at time {t:.2f} seconds')
-
 
     def move_by(self, angle_inc: float) -> None:
         if not self._initialized:
