@@ -51,6 +51,8 @@ class ServoController:
     
    
 if __name__ == "__main__":
-    # Test code
-    pass
+    from machine import Pin
+    
+    i2c = I2C(id=1, sda=Pin(14), scl=Pin(15))
+    servo_controller = ServoController(i2c = i2c)
 

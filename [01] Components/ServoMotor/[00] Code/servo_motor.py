@@ -70,6 +70,7 @@ class ServoMotor:
         self._set_raw_angle(raw_angle)
         self._angle = angle
         self._initialized = True
+        print(f'Setting {self._name} to {self._angle}')
     
     def move_to_angle(self, angle: float, time: float = 0.0, angle_inc: float = 1.0) -> None:
         start_angle = self._angle

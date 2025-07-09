@@ -15,53 +15,98 @@ import math
 
 
 class ServoSet:
-    def __init__(self, servos: list[ServoMotor]) -> None:
-        self.servos = servos
+    def __init__(self, servos: list[ServoMotor], name: str = '') -> None:
+        self._name = name
+        self._servos = servos
 
     # Make this async, or just a loop?
     def move_to_position(self, position: Position, time: float = 0.0, num_steps: int = 10) -> None:
 
         # Check for number of servos and position angles match
-        if len(position.angles) != len(self.servos):
+        if len(position.angles) != len(self._servos):
             raise ValueError("Position and servo count mismatch")
         
         # Check if all angles are in range for the servos
-        if  not all(servo.angle_in_range(angle) for servo, angle in zip(self.servos, position.angles)):
+        if  not all(servo.angle_in_range(angle) for servo, angle in zip(self._servos, position.angles)):
             raise ValueError("Position angles out of range for servos")
         
         # If no time or steps, set angles immediately
         if num_steps <= 1 or time <= 0.0:
-            for i, servo in enumerate(self.servos):
+            for i, servo in enumerate(self._servos):
                 servo.set_angle(position[i])
             return
         
         # Get angle increments for each servo
         angle_inc: list[float] = []
-        for i, servo in enumerate(self.servos):
-            angle_inc[i] = (position[i] - servo.angle)/num_steps
+        for i, servo in enumerate(self._servos):
+            angle_inc.append((position[i] - servo.angle)/num_steps)
 
         # Loop through the number of steps
         for _ in range(num_steps):
             # Update each servo angle
-            for i, servo in enumerate(self.servos):
+            for i, servo in enumerate(self._servos):
                 new_angle = servo.angle + angle_inc[i]
                 servo.set_angle(new_angle)
-            print(f"Moving to position: {[servo.angle for servo in self.servos]} (step {_ + 1}/{num_steps})")
+            print(f"Moving to position: {[servo.angle for servo in self._servos]} (step {_ + 1}/{num_steps})")
             sleep(time / num_steps)
+            
+    def home(self) -> None:
+        for servo in self._servos:
+            servo.home()
+            
+    def get_angles(self) -> list[float]:
+        return [servo.angle for servo in self._servos]
+    
+#     def set_angle(self, index: int, angle: double) -> None:
+#         self._servos[index].set_angle(angle)
+        
+    def set_angles(self, angles: list[double]) -> None:
+        for i, angle in enumerate(angles):
+            self._servos[i].set_angle(angle)
 
     def _get_delta_angle(self, position: Position) -> float:
         """Calculate the magnitude of the change in angle from the current angles to the target angles."""
-        return math.sqrt(sum((position[i] - servo.angle) ** 2 for i, servo in enumerate(self.servos)))
+        return math.sqrt(sum((position[i] - servo.angle) ** 2 for i, servo in enumerate(self._servos)))
+    
+    def __str__(self) -> str:
+        return f'{self._name}: {self.get_angles()}'
         
             
 
 if __name__ == "__main__":
-    # Example usage
-    servo1 = ServoMotor(name="Servo 1", pin=17, angle_start=0.0, angle_end=180.0, angle_home=90.0)
-    servo2 = ServoMotor(name="Servo 2", pin=18, angle_start=0.0, angle_end=180.0, angle_home=90.0)
+    from machine import I2C, Pin
+    from servo_controller import ServoController
+    from i2c_servo_motor import I2CServoMotor
     
-    servo_set = ServoSet(servos=[servo1, servo2])
     
-    position = Position(angles=[45.0, 135.0], name="Test Position")
+    # Create i2c
+    i2c = I2C(id=1, sda=Pin(14), scl=Pin(15))
+    devices = i2c.scan()
+    if len(devices) > 0:
+        print(f'Found {len(devices)} devices on I2C {id}:')
+        for device in devices:  
+            print(f'\tDecimal address: {device}  Hex address: {hex(device)}')
+    else:
+        print(f'Found no devices on I2C:')
+           
+    # Create servo controller
+    sc = ServoController(i2c = i2c)
     
-    servo_set.move_to_position(position, time=2.0, num_steps=10)
+    # Create servos
+    servos: list[I2CServoMotor] = [
+        I2CServoMotor(name='lower-leg', pin = 0, servo_controller = sc, raw_angle_0 = 107, angle_start=0,   angle_end=90, angle_home=45),
+        I2CServoMotor(name='upper-leg', pin = 1, servo_controller = sc, raw_angle_0 = 20,  angle_start=0,   angle_end=90, angle_home=45),
+        I2CServoMotor(name='shoulder',  pin = 2, servo_controller = sc, raw_angle_0 = 125, angle_start=-50, angle_end=50, angle_home=0)
+    ]
+    
+    # Create servo set
+    servo_set = ServoSet(servos=servos, name = 'test')
+    
+    # Home
+    servo_set.home()
+    print(servo_set)
+    
+    # Create position
+    #position = Position(angles=[45.0, 135.0, 100.0], name="Test Position")
+    
+    #servo_set.move_to_position(position, time=2.0, num_steps=50)
