@@ -5,7 +5,12 @@
 # Date: 2025-07-07
 # Author: Sam Linton
 # Description: Represents a set of servos
-# 
+#
+# TODO:
+# get_home_position -> position that holds homes
+# same for start, end
+#
+#
 #
 #
 from servo_motor import ServoMotor
@@ -56,9 +61,6 @@ class ServoSet:
             
     def get_angles(self) -> list[float]:
         return [servo.angle for servo in self._servos]
-    
-#     def set_angle(self, index: int, angle: double) -> None:
-#         self._servos[index].set_angle(angle)
         
     def set_angles(self, angles: list[double]) -> None:
         for i, angle in enumerate(angles):
@@ -93,10 +95,33 @@ if __name__ == "__main__":
     sc = ServoController(i2c = i2c)
     
     # Create servos
-    servos: list[I2CServoMotor] = [
-        I2CServoMotor(name='lower-leg', pin = 0, servo_controller = sc, raw_angle_0 = 107, angle_start=0,   angle_end=90, angle_home=45),
-        I2CServoMotor(name='upper-leg', pin = 1, servo_controller = sc, raw_angle_0 = 20,  angle_start=0,   angle_end=90, angle_home=45),
-        I2CServoMotor(name='shoulder',  pin = 2, servo_controller = sc, raw_angle_0 = 125, angle_start=-50, angle_end=50, angle_home=0)
+
+    # Create servos and servoset
+    servos: list[ServoMotor] = [
+        I2CServoMotor(
+            name='lower-leg', 
+            pin = 1, 
+            servo_controller = sc, 
+            raw_angle_0 = 70, 
+            angle_start=0, 
+            angle_end=110, 
+            angle_home=90),
+        I2CServoMotor(
+            name='shoulder-forward', 
+            pin = 2, 
+            servo_controller = sc, 
+            raw_angle_0 = 70, 
+            angle_start=0, 
+            angle_end=90, 
+            angle_home=45),
+        I2CServoMotor(
+            name='shoulder-out',  
+            pin = 3, 
+            servo_controller = sc, 
+            raw_angle_0 = 80, 
+            angle_start=-50, 
+            angle_end=50, 
+            angle_home=0)
     ]
     
     # Create servo set
@@ -107,6 +132,6 @@ if __name__ == "__main__":
     print(servo_set)
     
     # Create position
-    #position = Position(angles=[45.0, 135.0, 100.0], name="Test Position")
+    position = Position(angles=[110.0, 70.0, 0.0], name="Test Position")
     
-    #servo_set.move_to_position(position, time=2.0, num_steps=50)
+    servo_set.move_to_position(position, time=2.0, num_steps=100)

@@ -1,25 +1,47 @@
 #
-# servo_explorer
+# Version: 1.00
+# Date: 2025-07-09
+# Author: Sam Linton
+# Description: Interactive control of servos
 #
-# V2025_02_12_01
-#
+from servo_motor import ServoMotor
 from i2c_servo_motor import I2CServoMotor
 from servo_controller import ServoController
 from servo_set import ServoSet
 from machine import I2C, Pin
-from time import sleep
+
 
 # Create I2C object
-i2c = I2C(id=1, sda=Pin(14), scl=Pin(15))
+i2c: I2C = I2C(id=1, sda = Pin(14), scl = Pin(15))
 print(f'Found {len(i2c.scan())} i2c devices.')
 sc: ServoController = ServoController(i2c)
 
 # Create servos and servoset
-servos: list[I2CServoMotor] = [
-    I2CServoMotor(name='lower-leg', pin = 1, servo_controller = sc, raw_angle_0 = 70, angle_start=0, angle_end=110, angle_home=90),
-    I2CServoMotor(name='shoulder-forward', pin = 2, servo_controller = sc, raw_angle_0 = 70, angle_start=0, angle_end=90, angle_home=45),
-    I2CServoMotor(name='shoulder-out',  pin = 3, servo_controller = sc, raw_angle_0 = 80, angle_start=-50, angle_end=50, angle_home=0)
-]
+servos: list[ServoMotor] = [
+    I2CServoMotor(
+        name='lower-leg', 
+        pin = 1, 
+        servo_controller = sc, 
+        raw_angle_0 = 70, 
+        angle_start=0, 
+        angle_end=110, 
+        angle_home=90),
+    I2CServoMotor(
+        name='shoulder-forward', 
+        pin = 2, 
+        servo_controller = sc, 
+        raw_angle_0 = 70, 
+        angle_start=0, 
+        angle_end=90, 
+        angle_home=45),
+    I2CServoMotor(
+        name='shoulder-out',  
+        pin = 3, 
+        servo_controller = sc, 
+        raw_angle_0 = 80, 
+        angle_start=-50, 
+        angle_end=50, 
+        angle_home=0)]
 servo_set = ServoSet(servos=servos, name='leg')
 servo_set.home()
 
