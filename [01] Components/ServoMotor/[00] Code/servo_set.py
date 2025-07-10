@@ -7,6 +7,7 @@
 # Description: Represents a set of servos
 #
 # TODO:
+# Read from a file
 # get_home_position -> position that holds homes
 # same for start, end
 #
@@ -62,7 +63,7 @@ class ServoSet:
     def get_angles(self) -> list[float]:
         return [servo.angle for servo in self._servos]
         
-    def set_angles(self, angles: list[double]) -> None:
+    def set_angles(self, angles: list[float]) -> None:
         for i, angle in enumerate(angles):
             self._servos[i].set_angle(angle)
 
