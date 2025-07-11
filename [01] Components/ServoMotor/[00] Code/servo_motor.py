@@ -62,6 +62,18 @@ class ServoMotor:
             raise ValueError("Angle not initialized.")
         return self._angle
     
+    @property
+    def angle_start(self) -> float:
+        return self._angle_start
+    
+    @property
+    def angle_end(self) -> float:
+        return self._angle_end
+    
+    @property
+    def angle_home(self) -> float:
+        return self._angle_home
+    
     def set_angle(self, angle: float) -> None:
         """Write logical angle to the servo."""
         raw_angle = self._raw_angle_from_angle(angle)

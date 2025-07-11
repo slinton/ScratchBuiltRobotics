@@ -10,6 +10,7 @@
 # Read from a file
 # get_home_position -> position that holds homes
 # same for start, end
+# Fix irritating issue when out of range 
 #
 #
 #
@@ -24,6 +25,21 @@ class ServoSet:
     def __init__(self, servos: list[ServoMotor], name: str = '') -> None:
         self._name = name
         self._servos = servos
+
+    def get_home_position(self) -> Position:
+        """Get the home position of the servo set."""
+        angles: list[float] = [servo.angle_home for servo in self._servos]
+        return Position(angles=angles, name=f"{self._name} Home Position")
+    
+    def get_start_position(self) -> Position:
+        """Get the start position of the servo set."""
+        angles: list[float] = [servo.angle_start for servo in self._servos]
+        return Position(angles=angles, name=f"{self._name} Start Position")
+    
+    def get_end_position(self) -> Position:
+        """Get the end position of the servo set."""
+        angles: list[float] = [servo.angle_end for servo in self._servos]
+        return Position(angles=angles, name=f"{self._name} End Position")
 
     # Make this async, or just a loop?
     def move_to_position(self, position: Position, time: float = 0.0, num_steps: int = 10) -> None:
@@ -56,16 +72,16 @@ class ServoSet:
             print(f"Moving to position: {[servo.angle for servo in self._servos]} (step {_ + 1}/{num_steps})")
             sleep(time / num_steps)
             
-    def home(self) -> None:
-        for servo in self._servos:
-            servo.home()
-            
     def get_angles(self) -> list[float]:
         return [servo.angle for servo in self._servos]
         
     def set_angles(self, angles: list[float]) -> None:
         for i, angle in enumerate(angles):
             self._servos[i].set_angle(angle)
+            
+    def home(self) -> None:
+        for servo in self._servos:
+            servo.home()
 
     def _get_delta_angle(self, position: Position) -> float:
         """Calculate the magnitude of the change in angle from the current angles to the target angles."""
@@ -81,7 +97,6 @@ if __name__ == "__main__":
     from servo_controller import ServoController
     from i2c_servo_motor import I2CServoMotor
     
-    
     # Create i2c
     i2c = I2C(id=1, sda=Pin(14), scl=Pin(15))
     devices = i2c.scan()
@@ -94,8 +109,6 @@ if __name__ == "__main__":
            
     # Create servo controller
     sc = ServoController(i2c = i2c)
-    
-    # Create servos
 
     # Create servos and servoset
     servos: list[ServoMotor] = [
@@ -130,7 +143,16 @@ if __name__ == "__main__":
     
     # Home
     servo_set.home()
+    home_position = servo_set.get_home_position()
     print(servo_set)
+
+    # Get start and end positions
+    start_position = servo_set.get_start_position()
+    end_position = servo_set.get_end_position()
+    servo_set.move_to_position(start_position, time=2.0, num_steps=100)
+    print(f'Start Position: {start_position}')
+    servo_set.move_to_position(end_position, time=2.0, num_steps=100)
+    print(f'End Position: {end_position}')
     
     # Create position
     position = Position(angles=[110.0, 70.0, 0.0], name="Test Position")

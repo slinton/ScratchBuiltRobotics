@@ -53,7 +53,11 @@ while not command.lower() in ['quit', 'q', 'x']:
         print(command_words)
         
         if command_words[0] in ['h', 'home']:
-            servo_set.home()
+            servo_set.move_to_position(servo_set.get_home_position(), time=1.0, num_steps=100)
+        elif command_words[0] in ['s', 'start']:
+            servo_set.move_to_position(servo_set.get_start_position(), time = 1.0, num_steps = 100)
+        elif command_words[0] in ['e', 'end']:
+            servo_set.move_to_position(servo_set.get_end_position(), time = 1.0, num_steps = 100)
         else:
             angles: list[float] = [float(command_word) for command_word in command_words]
             servo_set.set_angles(angles)
