@@ -5,45 +5,55 @@
 # Description: Interactive control of servos
 #
 from servo_motor import ServoMotor
-from i2c_servo_motor import I2CServoMotor
-from servo_controller import ServoController
+# from i2c_servo_motor import I2CServoMotor
+# from servo_controller import ServoController
 from servo_set import ServoSet
-from machine import I2C, Pin
+from servo_set_reader import ServoSetReader
+# from machine import I2C, Pin
 
 
 # Create I2C object
-i2c: I2C = I2C(id=1, sda = Pin(14), scl = Pin(15))
-print(f'Found {len(i2c.scan())} i2c devices.')
-sc: ServoController = ServoController(i2c)
+# i2c: I2C = I2C(id=1, sda = Pin(14), scl = Pin(15))
+# print(f'Found {len(i2c.scan())} i2c devices.')
+# sc: ServoController = ServoController(i2c)
 
-# Create servos and servoset
-servos: list[ServoMotor] = [
-    I2CServoMotor(
-        name='lower-leg', 
-        pin = 1, 
-        servo_controller = sc, 
-        raw_angle_0 = 70, 
-        angle_start=0, 
-        angle_end=110, 
-        angle_home=90),
-    I2CServoMotor(
-        name='shoulder-forward', 
-        pin = 2, 
-        servo_controller = sc, 
-        raw_angle_0 = 70, 
-        angle_start=0, 
-        angle_end=90, 
-        angle_home=45),
-    I2CServoMotor(
-        name='shoulder-out',  
-        pin = 3, 
-        servo_controller = sc, 
-        raw_angle_0 = 80, 
-        angle_start=-50, 
-        angle_end=50, 
-        angle_home=0)]
-servo_set = ServoSet(servos=servos, name='leg')
+# # Create servos and servoset
+# servos: list[ServoMotor] = [
+#     I2CServoMotor(
+#         name='lower-leg', 
+#         pin = 1, 
+#         servo_controller = sc, 
+#         raw_angle_0 = 70, 
+#         angle_start=0, 
+#         angle_end=110, 
+#         angle_home=90),
+#     I2CServoMotor(
+#         name='shoulder-forward', 
+#         pin = 2, 
+#         servo_controller = sc, 
+#         raw_angle_0 = 70, 
+#         angle_start=0, 
+#         angle_end=90, 
+#         angle_home=45),
+#     I2CServoMotor(
+#         name='shoulder-out',  
+#         pin = 3, 
+#         servo_controller = sc, 
+#         raw_angle_0 = 80, 
+#         angle_start=-50, 
+#         angle_end=50, 
+#         angle_home=0)]
+# servo_set = ServoSet(servos=servos, name='leg')
+# servo_set.home()
+
+
+# filename: str = 'rear_left_leg.srv'
+# filename: str = 'front_right_leg.srv'
+filename: str = 'rear_right_leg.srv'
+
+servo_set = ServoSetReader.create_servo_from_file(filename)
 servo_set.home()
+print(f'Servo Set: {servo_set.name}')
 
 command = input('\nCommand: ')
 
@@ -54,10 +64,21 @@ while not command.lower() in ['quit', 'q', 'x']:
         
         if command_words[0] in ['h', 'home']:
             servo_set.move_to_position(servo_set.get_home_position(), time=1.0, num_steps=100)
+
         elif command_words[0] in ['s', 'start']:
             servo_set.move_to_position(servo_set.get_start_position(), time = 1.0, num_steps = 100)
+
         elif command_words[0] in ['e', 'end']:
             servo_set.move_to_position(servo_set.get_end_position(), time = 1.0, num_steps = 100)
+
+        elif command_words[0] in ['?', 'help']:
+            print('Commands:')
+            print('\th, home: Move to home position')
+            print('\ts, start: Move to start position')
+            print('\te, end: Move to end position')
+            print('\tx, quit, q: Quit the program')
+            print('\tangles: Set angles for servos')
+
         else:
             angles: list[float] = [float(command_word) for command_word in command_words]
             servo_set.set_angles(angles)

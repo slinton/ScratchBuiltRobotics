@@ -27,6 +27,10 @@ class ServoSet:
         self._name = name
         self._servos = servos
 
+    @property
+    def name(self) -> str:
+        return self._name
+
     def get_home_position(self) -> Position:
         """Get the home position of the servo set."""
         angles: list[float] = [servo.angle_home for servo in self._servos]
