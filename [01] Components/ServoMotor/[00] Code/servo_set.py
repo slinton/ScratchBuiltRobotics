@@ -16,6 +16,7 @@
 #
 #
 from servo_motor import ServoMotor
+from movement import Movement
 from position import Position
 from time import sleep
 import math
@@ -82,6 +83,11 @@ class ServoSet:
     def home(self) -> None:
         for servo in self._servos:
             servo.home()
+            
+    def execute_movement(self, movement: Movement) -> None:
+        for n in range(movement.num_positions):
+            time, position = movement[n]
+            self.move_to_position(position, time=time, num_steps=100)
 
     def _get_delta_angle(self, position: Position) -> float:
         """Calculate the magnitude of the change in angle from the current angles to the target angles."""
@@ -91,7 +97,6 @@ class ServoSet:
         return f'{self._name}: {self.get_angles()}'
         
             
-
 if __name__ == "__main__":
     from machine import I2C, Pin
     from servo_controller import ServoController
@@ -128,13 +133,13 @@ if __name__ == "__main__":
             angle_start=0, 
             angle_end=90, 
             angle_home=45),
-        I2CServoMotor(
+                I2CServoMotor(
             name='shoulder-out',  
             pin = 3, 
             servo_controller = sc, 
             raw_angle_0 = 80, 
-            angle_start=-50, 
-            angle_end=50, 
+            angle_start=-30, 
+            angle_end=30, 
             angle_home=0)
     ]
     
