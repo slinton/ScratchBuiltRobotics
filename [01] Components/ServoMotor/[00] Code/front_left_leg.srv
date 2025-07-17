@@ -1,4 +1,4 @@
-front_left_leg
+front-left-leg
 i2c, 1, 14, 15,
 i2c servo, lower-leg,           1, 70,   0, 110, 90
 i2c servo, shoulder-forward,    2, 70,   0,  90, 45
