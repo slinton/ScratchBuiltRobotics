@@ -55,42 +55,46 @@ class ServoSetReader:
     @classmethod
     def create_i2c_servo_from_line(cls, line: str, controller: ServoController) -> I2CServoMotor:
         words = line.split(',')
-        if len(words) < 7:
+        if len(words) < 8:
             raise ValueError("Invalid servo line format")
         
         name: str = words[1].strip()
         pin: int = int(words[2].strip())
-        angle_min: float = float(words[3].strip())
-        angle_start: float = float(words[4].strip())
-        angle_end: float = float(words[5].strip())
-        angle_home: float = float(words[6].strip())
+        raw_angle_0: float = float(words[3].strip())
+        sign: int = int(words[4].strip())
+        angle_start: float = float(words[5].strip())
+        angle_end: float = float(words[6].strip())
+        angle_home: float = float(words[7].strip())
         return I2CServoMotor(
             name=name,
             pin=pin,
             servo_controller=controller,
-            raw_angle_0=angle_min,
+            raw_angle_0=raw_angle_0,
+            sign=sign,
             angle_start=angle_start,
             angle_end=angle_end,
             angle_home=angle_home
         )
     
     @classmethod
-    def create_pwm_servo_from_line(cls, self, line: str) -> PWMServoMotor:
+    def create_pwm_servo_from_line(cls, line: str) -> PWMServoMotor:
         words = line.split(',')
-        if len(words) < 7:
+        if len(words) < 8:
             raise ValueError("Invalid servo line format")
         
         name: str = words[1].strip()
         pin: int = int(words[2].strip())
-        angle_min: float = float(words[3].strip())
-        angle_start: float = float(words[4].strip())
-        angle_end: float = float(words[5].strip())
-        angle_home: float = float(words[6].strip())
-        
+        raw_angle_0: float = float(words[3].strip())
+        sign: int = int(words[4].strip())
+        angle_start: float = float(words[5].strip())
+        angle_end: float = float(words[6].strip())
+        angle_home: float = float(words[7].strip())
+
         return PWMServoMotor(
             name=name,
             pin=pin,
-            raw_angle_0=angle_min,
+            raw_angle_0=raw_angle_0,
+            sign=sign,
             angle_start=angle_start,
             angle_end=angle_end,
             angle_home=angle_home
@@ -100,9 +104,10 @@ class ServoSetReader:
 if __name__ == '__main__':
     #import os
     #script_dir = os.path.dirname(os.path.abspath(__file__))
-    filename = "leg.srv"
+    filename = "front_left_leg.srv"
     #full_path = os.path.join(script_dir, filename)
     full_path = filename  # Assuming the file is in the same directory as this script
     print(full_path)
     servo_set: ServoSet = ServoSetReader.create_servo_from_file(full_path)
+    servo_set.home()
     print(servo_set)

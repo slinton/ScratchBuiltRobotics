@@ -12,44 +12,10 @@ from servo_set_reader import ServoSetReader
 # from machine import I2C, Pin
 
 
-# Create I2C object
-# i2c: I2C = I2C(id=1, sda = Pin(14), scl = Pin(15))
-# print(f'Found {len(i2c.scan())} i2c devices.')
-# sc: ServoController = ServoController(i2c)
-
-# # Create servos and servoset
-# servos: list[ServoMotor] = [
-#     I2CServoMotor(
-#         name='lower-leg', 
-#         pin = 1, 
-#         servo_controller = sc, 
-#         raw_angle_0 = 70, 
-#         angle_start=0, 
-#         angle_end=110, 
-#         angle_home=90),
-#     I2CServoMotor(
-#         name='shoulder-forward', 
-#         pin = 2, 
-#         servo_controller = sc, 
-#         raw_angle_0 = 70, 
-#         angle_start=0, 
-#         angle_end=90, 
-#         angle_home=45),
-#     I2CServoMotor(
-#         name='shoulder-out',  
-#         pin = 3, 
-#         servo_controller = sc, 
-#         raw_angle_0 = 80, 
-#         angle_start=-50, 
-#         angle_end=50, 
-#         angle_home=0)]
-# servo_set = ServoSet(servos=servos, name='leg')
-# servo_set.home()
-
-
-# filename: str = 'rear_left_leg.srv'
+filename: str = 'rear_left_leg.srv'
 # filename: str = 'front_right_leg.srv'
-filename: str = 'rear_right_leg.srv'
+#filename: str = 'rear_right_leg.srv'
+#filename: str = 'rear_right_leg.srv'
 
 servo_set = ServoSetReader.create_servo_from_file(filename)
 servo_set.home()
@@ -82,10 +48,12 @@ while not command.lower() in ['quit', 'q', 'x']:
         else:
             angles: list[float] = [float(command_word) for command_word in command_words]
             servo_set.set_angles(angles)
-            
-        print(servo_set.get_angles())    
-        
+
+        print(f'Logical Angles: {servo_set.get_angles()}')
+        print(f'Raw Angles: {servo_set.get_raw_angles()}')
+
     except Exception as e:
         print(f'Error: {e} Type in servo angles or "x" to quit')
         
     command = input('\nCommand: ')
+

@@ -83,6 +83,11 @@ class ServoSet:
     def set_angles(self, angles: list[float]) -> None:
         for i, angle in enumerate(angles):
             self._servos[i].set_angle(angle)
+
+    # For debugging
+    def get_raw_angles(self) -> list[float]:
+        """Get the raw angles of the servos."""
+        return [servo.raw_angle for servo in self._servos]
             
     def home(self) -> None:
         for servo in self._servos:

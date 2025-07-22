@@ -30,6 +30,7 @@ class ServoMotor:
                  name: str ='',
                  pin: int = 0,
                  raw_angle_0: float = 0.0, # Raw angle corresponding to angle = 0.0
+                 sign: int = 1, # 1 for increasing angle, -1 for decreasing angle
                  angle_start: float = 0.0, # Logical starting angle
                  angle_end: float = 180.0, # Logical ending value
                  angle_home: float = 90.0, # Logical home angle
@@ -40,7 +41,7 @@ class ServoMotor:
         self._initialized: bool = False # angle is not initialized
         self._angle: float = angle_home
         self._raw_angle_0: float = raw_angle_0
-        self._sign: int = 1 if angle_end > angle_start else -1
+        self._sign: int = sign
 
         self._angle_start: float = angle_start
         self._angle_end: float = angle_end
@@ -61,6 +62,10 @@ class ServoMotor:
         if not self._initialized:
             raise ValueError("Angle not initialized.")
         return self._angle
+    
+    @property
+    def raw_angle(self) -> float:
+        return self._raw_angle_from_angle(self._angle)
     
     @property
     def angle_start(self) -> float:

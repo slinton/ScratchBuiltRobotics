@@ -26,11 +26,12 @@ class I2CServoMotor(ServoMotor):
                  servo_controller: ServoController,
                  name: str = '',
                  raw_angle_0: float = 0.0,
+                 sign: int = 1,  # 1 for increasing angle, -1 for decreasing angle
                  angle_start: float = 0.0,
                  angle_end: float = 180.0,
                  angle_home: float = 90.0,
                  ) -> None:
-        super().__init__(name, pin, raw_angle_0, angle_start, angle_end, angle_home)
+        super().__init__(name, pin, raw_angle_0, sign, angle_start, angle_end, angle_home)
 
         self._i2c: I2C = servo_controller.i2c
 
