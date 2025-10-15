@@ -8,7 +8,6 @@
 #
 # TODO:
 # Switch to BLE notifications if available, otherwise fall back to polling
-# Only call connection stat logic when actually disconnecting: 
 #
 import aioble
 import bluetooth
