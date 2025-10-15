@@ -6,6 +6,9 @@
 # Author: Sam Linton
 # Description: A simple BLE client that connects to a server and receives messages from it.
 #
+# TODO:
+# Switch to BLE notifications if available, otherwise fall back to polling
+# Only call connection stat logic when actually disconnecting: 
 #
 import aioble
 import bluetooth
@@ -14,7 +17,7 @@ import uasyncio as asyncio
 _GENERIC_SERVICE_UUID = bluetooth.UUID(0x1848) # data service UUID
 _GENERIC_CHAR_UUID = bluetooth.UUID(0x2A6E) # characteristic UUID
 
-_REMOTE_CHARACTERISTICS_UUID = bluetooth.UUID(0x2A6E)
+#_REMOTE_CHARACTERISTICS_UUID = bluetooth.UUID(0x2A6E)
 
 class BLEClient:
     """Class to create a BLE client that connects to a server and receives messages.
@@ -110,11 +113,11 @@ class BLEClient:
         self.characteristic = await service.characteristic(self.char_uuid)
         print(f'Characteristic: {self.characteristic}')
         
-    async def find_server(self)-> None:
+    async def find_server(self)-> aioble.Device:
         """Find the server with the name server_name and service_uuid.
 
         Returns:
-            device: server
+            aioble.Device: The BLE device representing the server
         """
         while True:
             print('Scanning for server...', end='')

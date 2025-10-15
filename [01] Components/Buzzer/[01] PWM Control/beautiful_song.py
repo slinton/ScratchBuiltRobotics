@@ -1,5 +1,5 @@
 #
-# beeautiful_song
+# beautiful_song
 # Version: 1.00
 # Date: 2025-05-31
 # Author: Sam Linton
