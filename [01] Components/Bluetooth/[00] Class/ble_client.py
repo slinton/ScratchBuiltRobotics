@@ -86,7 +86,7 @@ class BLEClient:
         Returns:
             bool: True if connected, False otherwise.
         """
-        return not self.connection == None and self.connection.is_connected() 
+        return self.connection is not None and self.connection.is_connected() 
                 
     async def receive_message(self)-> None:
         """Receive a message from the server and call the user provided function if it exists.
