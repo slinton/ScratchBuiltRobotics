@@ -19,7 +19,11 @@ _GENERIC_CHAR_UUID = bluetooth.UUID(0x2A6E) # characteristic UUID
 #_REMOTE_CHARACTERISTICS_UUID = bluetooth.UUID(0x2A6E)
 
 class BLEClient:
-    """Class to create a BLE client that connects to a server and receives messages.
+    """Class for BLE client that connects to a server and receives messages. It can be 
+    used with the BLEServer class to create a simple one-way BLE communication system.
+    This class is designed so that it can be subclassed for specific applications, or, for
+    programmmers who are not familiar with Object Oriented Programming, it can be used with
+    callbacks to handle received messages and connection events.
     """
     
     def __init__(self,
@@ -97,7 +101,6 @@ class BLEClient:
         if self.receive_message_func:
             self.receive_message_func(message_str)
         
-                
     async def connect_to_server(self)-> None:
         """Connect to the server with the name server_name and service_uuid.
         """
