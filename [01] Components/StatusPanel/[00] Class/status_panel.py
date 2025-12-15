@@ -4,7 +4,8 @@
 # Version: 1.00
 # Date: 2025-05-31
 # Author: Sam Linton
-# Description: A status panel class for Raspberry Pi Pico that manages BLE, power and autonomous status indicators.
+# Description: A status panel class for Raspberry Pi Pico that manages BLE,
+# power and autonomous status indicators.
 #
 from machine import Pin
 
