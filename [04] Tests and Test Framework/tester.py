@@ -1,78 +1,51 @@
-def test1(num):
-    print(num)
+from functools import partial
 
-class Tester():
-    """Class to facilitate testing of devices and components.
-    """
-    
+class Tester:
+    """Class to facilitate testing of devices and components."""
+
     def __init__(self) -> None:
-        self.func_strings = []
-        
-    def add(self, func_string: str) -> None:
-        self.func_strings.append(func_string)
+        self.tests: list[tuple[str, callable]] = []
 
-    def execute(self, index: int = None) -> None:
-        # Execute the specified test
+    def add(self, name: str, func: callable, *args, **kwargs) -> None:
+        """Register a test with optional positional and keyword arguments."""
+        bound = partial(func, *args, **kwargs)
+        self.tests.append((name, bound))
+
+    def execute(self, index: int | None = None) -> None:
         if index is not None:
+            name, func = self.tests[index]
             try:
-                print()
-                print(f'Executing: {self.func_strings[index]}')
-                exec(self.func_strings[index])
+                print(f"\nExecuting: {name}")
+                func()   # arguments already bound
             except Exception as e:
-                print(f'Failed to execute {self.func_strings[index]} with Exception: {e}')
+                print(f"Failed to execute {name} with Exception: {e}")
+            return
 
         # Execute all tests
-        else:
-            for i in range(len(self.func_strings)):
-                self.execute(i)
+        for i in range(len(self.tests)):
+            self.execute(i)
 
     def display_menu(self) -> None:
-        print()
-        print('Test Menu:')
-        for i, func_string in enumerate(self.func_strings):
-            print(f'{i}: {func_string}')
-        print('a: all')
-        print('q: quit')
-
-    def _is_valid_answer(answer: str) -> bool:
-        return answer in ['a', 'q'] or answer.isdigit()
+        print("\nTest Menu:")
+        for i, (name, _) in enumerate(self.tests):
+            print(f"{i}: {name}")
+        print("a: all")
+        print("q: quit")
 
     def run_tests(self) -> None:
-        answer = ''
-        while answer != 'q':
+        while True:
             self.display_menu()
             answer = input('Enter selection: ')
 
-            # Quit
             if answer == 'q':
                 return
-            
-            # Execute all tests
             elif answer == 'a':
                 self.execute()
-
-            # Select one of the enumerated tests
             elif answer.isdigit():
                 num = int(answer)
-                if num >= 0 and num < len(self.func_strings):
-                    self.execute(int(answer))
+                if 0 <= num < len(self.tests):
+                    self.execute(num)
                 else:
-                    print(f'\nInvalid input. Must be between 0 and {len(self.func_strings) - 1}.')
-
-            # Invalid input
+                    print(f'\nInvalid input. Must be between 0 and {len(self.tests) - 1}.')
             else:
                 print('\nInvalid input. Must be a number or q.')
-            
-
-if __name__ == '__main__':
-    tester = Tester()
-    tester.add("test1(5)")
-    tester.add("test1(8)")
-    tester.run_tests()
-
-
-    
-    
-        
-        
-        
